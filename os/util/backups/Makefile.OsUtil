@@ -1,0 +1,2 @@
+SRC += os/util/stdlib.c
+SRC += os/util/ringbuf.c

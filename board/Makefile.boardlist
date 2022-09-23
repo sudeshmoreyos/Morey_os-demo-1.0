@@ -1,0 +1,14 @@
+ifeq ($(BOARD),ARDUINO_UNO)
+	BOARD_SERIES = ARDUINO
+	BOARD_MODULE = UNO
+	ARCH = AVR_MEGA
+	CONTROLLER = MEGA328
+	FREQ = 16000000
+	CDEFS += -DBOARD=$(BOARD)
+	MCU_AVRDUDE = m328p
+	BOARD_DEF = 1
+endif
+
+ifndef BOARD_DEF
+$(error Error : Unsupported Board (BOARD): $(BOARD))
+endif

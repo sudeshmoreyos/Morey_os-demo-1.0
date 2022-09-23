@@ -1,0 +1,2 @@
+SRC += os/sys/process.c
+SRC += os/sys/ptimer.c

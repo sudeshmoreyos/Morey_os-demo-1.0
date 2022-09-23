@@ -1,0 +1,1 @@
+SRC += os/lib/debug.c
