@@ -1,0 +1,31 @@
+ifeq ($(ARCH),AVR_MEGA)
+	CPU = AVR
+	CPU_SERIES = MEGA
+	ARCH_DEF = 1
+endif
+
+ifeq ($(ARCH),AVR_MEGA0)
+	CPU = AVR
+	CPU_SERIES = MEGA0
+	ARCH_DEF = 1
+endif
+
+ifeq ($(ARCH),AVR_XMEGA)
+	CPU = AVR
+	CPU_SERIES = XMEGA
+	ARCH_DEF = 1
+endif
+
+ifdef ARCH_DEF
+	CDEFS += -DCPU=$(CPU)
+	CDEFS += -DCPU_SERIES=$(CPU_SERIES)
+	include $(MOREY_OS_PATH)/arch/$(CPU)/$(CPU_SERIES)/Makefile$(CPU)$(CPU_SERIES).controllerlist
+endif
+
+ifndef ARCH_DEF
+$(error Error : Unsupported Architechture (ARCH) : $(ARCH))
+endif
+
+ifndef CONTROLLER_DEF
+$(error Error : Unsupported Controller (CONTROLLER) : $(CONTROLLER) for Architechture (ARCH) : $(ARCH))
+endif
