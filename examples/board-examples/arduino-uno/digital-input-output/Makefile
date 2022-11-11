@@ -1,5 +1,5 @@
 PROJECT = digital-input-output
-MOREY_OS_PATH = ../..
+MOREY_OS_PATH = ../../../..
 
 BOARD = ARDUINO_UNO
 
