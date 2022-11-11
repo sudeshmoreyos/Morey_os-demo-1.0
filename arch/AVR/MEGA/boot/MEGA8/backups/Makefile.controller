@@ -1,2 +1,0 @@
-SRC += arch/$(CPU)/$(CPU_SERIES)/boot/$(CONTROLLER)/boot.c
-SRC += arch/$(CPU)/$(CPU_SERIES)/boot/$(CONTROLLER)/clock.c
