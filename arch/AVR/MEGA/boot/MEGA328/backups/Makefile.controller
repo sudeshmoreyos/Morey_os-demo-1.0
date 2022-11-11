@@ -1,2 +1,0 @@
-SRC += arch/AVR/MEGA/boot/MEGA328/boot.c
-SRC += arch/AVR/MEGA/boot/MEGA328/clock.c
