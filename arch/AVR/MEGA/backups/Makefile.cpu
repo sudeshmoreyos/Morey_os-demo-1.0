@@ -1,3 +1,0 @@
-SRC += arch/$(CPU)/$(CPU_SERIES)/drivers/avr_mega_digital.c
-SRC += arch/$(CPU)/$(CPU_SERIES)/drivers/avr_mega_uart.c
-SRC += arch/$(CPU)/$(CPU_SERIES)/drivers/avr_mega_uart0.c
