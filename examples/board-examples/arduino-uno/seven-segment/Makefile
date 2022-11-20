@@ -1,4 +1,4 @@
-PROJECT = seven_segment_counter
+PROJECT = seven-segment-counter
 MOREY_OS_PATH = ../../../..
 
 BOARD = ARDUINO_UNO
