@@ -1,13 +1,3 @@
-/*********************************************************
- **														**
- **		Company : DRMZ SYSTEM INNOVATIONS PVT LTD		**
- **     Project : Morey_os                              **
- **     Author  : Sudesh Morey                          **
- **     version : v1.4 									**
- **   	File    : SevenSegment.h						**
- **														**
- ********************************************************/ 
-
 #ifndef SEVENSEGMENT_H
 #define SEVENSEGMENT_H
 
