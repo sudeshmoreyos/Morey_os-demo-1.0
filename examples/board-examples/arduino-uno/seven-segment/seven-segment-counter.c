@@ -1,7 +1,7 @@
 // Declare here all header files used in the code.h , OS related files are included by default
 #include "morey_os.h"
 #include "lib/SevenSegment.h"
-SevenSegment_t seg1={D0,D1,D2,D3,D4,D5,D6,D7},seg2={C0,C1,C2,C3,C4,C5,B0,B1};
+SevenSegment_t seg1={pin0,pin1,pin2,pin3,pin4,pin5,pin6,pin7},seg2={pinA0,pinA1,pinA2,pinA3,pinA4,pinA5,pin8,pin9};
 
 // Declare all initialization functions of controller peripherals in the setup function below
 void setup(void)
