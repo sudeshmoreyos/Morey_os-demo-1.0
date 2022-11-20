@@ -41,17 +41,25 @@
 
 typedef struct seven_segment_struct 
 {
-	mos_uint8_t segment_type;
-	mos_uint8_t segment_pins[8];
+	mos_uint8_t segment_pin_a;
+	mos_uint8_t segment_pin_b;
+	mos_uint8_t segment_pin_c;
+	mos_uint8_t segment_pin_d;
+	mos_uint8_t segment_pin_e;
+	mos_uint8_t segment_pin_f;
+	mos_uint8_t segment_pin_g;
+	mos_uint8_t segment_pin_h;	
+	mos_uint8_t segment_type;	
 } SevenSegment_t;
 
-void SevenSegment_begin (struct seven_segment_struct * seven_segment_obj, mos_uint8_t segment_type, mos_uint8_t pina, mos_uint8_t pinb, \
-	mos_uint8_t pinc, mos_uint8_t pind,mos_uint8_t pine, mos_uint8_t pinf,mos_uint8_t ping, mos_uint8_t pinh);
+void SevenSegment_begin (struct seven_segment_struct * seven_segment_obj, mos_uint8_t segment_type);
 void SevenSegment_print (struct seven_segment_struct * seven_segment_obj, mos_uint8_t digit);
 void SevenSegment_printDot (struct seven_segment_struct * seven_segment_obj, mos_uint8_t digit);
 void SevenSegment_printReverse (struct seven_segment_struct * seven_segment_obj, mos_uint8_t digit);
 void SevenSegment_printDotReverse (struct seven_segment_struct * seven_segment_obj, mos_uint8_t digit);
-void SevenSegment_customPrint (struct seven_segment_struct * seven_segment_obj, mos_uint8_t * custom_data);
+void SevenSegment_customPrint (struct seven_segment_struct * seven_segment_obj, \
+mos_uint8_t custom_data_pin_a, mos_uint8_t custom_data_pin_b, mos_uint8_t custom_data_pin_c, mos_uint8_t custom_data_pin_d, \
+mos_uint8_t custom_data_pin_e, mos_uint8_t custom_data_pin_f, mos_uint8_t custom_data_pin_g, mos_uint8_t custom_data_pin_h);
 
 #endif	
 #endif
