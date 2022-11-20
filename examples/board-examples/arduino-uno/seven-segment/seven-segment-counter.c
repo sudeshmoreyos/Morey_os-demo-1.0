@@ -27,26 +27,50 @@ PROCESS_THREAD(SEVEN1)
 
   while(1)
   {
-	for(i=0; i<16; i++)
+	for(i=0; i<19; i++)
 	{
 		SevenSegment_print(&seg1, i);
 		DELAY_SEC_PRECISE(0.5);
 	} 
-    for(i=0; i<16; i++)
+    for(i=0; i<19; i++)
 	{
 		SevenSegment_printDot(&seg1, i);	
 		DELAY_SEC_PRECISE(0.5);
 	}
-    for(i=0; i<16; i++)
+    for(i=0; i<19; i++)
 	{
 		SevenSegment_printReverse(&seg1, i);
 		DELAY_SEC_PRECISE(0.5);
 	}
-    for(i=0; i<16; i++)
+    for(i=0; i<19; i++)
 	{
 		SevenSegment_printDotReverse(&seg1, i);
 		DELAY_SEC_PRECISE(0.5);
-	}	 	
+	}
+
+	SevenSegment_customPrint(&seg1,1,0,0,0,0,0,0,0);
+	DELAY_SEC_PRECISE(0.5);
+	
+	SevenSegment_customPrint(&seg1,0,1,0,0,0,0,0,0);
+	DELAY_SEC_PRECISE(0.5);
+	
+	SevenSegment_customPrint(&seg1,0,0,1,0,0,0,0,0);
+	DELAY_SEC_PRECISE(0.5);
+	
+	SevenSegment_customPrint(&seg1,0,0,0,1,0,0,0,0);
+	DELAY_SEC_PRECISE(0.5);
+	
+	SevenSegment_customPrint(&seg1,0,0,0,0,1,0,0,0);
+	DELAY_SEC_PRECISE(0.5);
+	
+	SevenSegment_customPrint(&seg1,0,0,0,0,0,1,0,0);
+	DELAY_SEC_PRECISE(0.5);
+	
+	SevenSegment_customPrint(&seg1,0,0,0,0,0,0,1,0);
+	DELAY_SEC_PRECISE(0.5);
+	
+	SevenSegment_customPrint(&seg1,0,0,0,0,0,0,0,1);
+	DELAY_SEC_PRECISE(0.5);
   }
   // process ends here
   END();
@@ -62,26 +86,51 @@ PROCESS_THREAD(SEVEN2)
 
   while(1)
   {
-	for(i=0; i<16; i++)
+	for(i=0; i<19; i++)
 	{
 		SevenSegment_print(&seg2, i);
 		DELAY_SEC_PRECISE(0.5);
 	} 
-    for(i=0; i<16; i++)
+    for(i=0; i<19; i++)
 	{
 		SevenSegment_printDot(&seg2, i);	
 		DELAY_SEC_PRECISE(0.5);
 	}
-    for(i=0; i<16; i++)
+    for(i=0; i<19; i++)
 	{
 		SevenSegment_printReverse(&seg2, i);
 		DELAY_SEC_PRECISE(0.5);
 	}
-    for(i=0; i<16; i++)
+    for(i=0; i<19; i++)
 	{
 		SevenSegment_printDotReverse(&seg2, i);
 		DELAY_SEC_PRECISE(0.5);
-	}	 	
+	}	
+
+	SevenSegment_customPrint(&seg2,1,0,0,0,0,0,0,0);
+	DELAY_SEC_PRECISE(0.5);
+	
+	SevenSegment_customPrint(&seg2,0,1,0,0,0,0,0,0);
+	DELAY_SEC_PRECISE(0.5);
+	
+	SevenSegment_customPrint(&seg2,0,0,1,0,0,0,0,0);
+	DELAY_SEC_PRECISE(0.5);
+	
+	SevenSegment_customPrint(&seg2,0,0,0,1,0,0,0,0);
+	DELAY_SEC_PRECISE(0.5);
+	
+	SevenSegment_customPrint(&seg2,0,0,0,0,1,0,0,0);
+	DELAY_SEC_PRECISE(0.5);
+	
+	SevenSegment_customPrint(&seg2,0,0,0,0,0,1,0,0);
+	DELAY_SEC_PRECISE(0.5);
+	
+	SevenSegment_customPrint(&seg2,0,0,0,0,0,0,1,0);
+	DELAY_SEC_PRECISE(0.5);
+	
+	SevenSegment_customPrint(&seg2,0,0,0,0,0,0,0,1);
+	DELAY_SEC_PRECISE(0.5);
+	
   }
   // process ends here
   END();
