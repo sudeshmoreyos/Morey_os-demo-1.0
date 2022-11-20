@@ -11,13 +11,13 @@ void setup(void)
 }
 
 // Delcare all processes here
-PROCESS(SEVEN1,"SEVEN-1");
-PROCESS(SEVEN2,"SEVEN-2");
+TASK_CREATE(SEVEN1,"SEVEN-1");
+TASK_CREATE(SEVEN2,"SEVEN-2");
 
 // Delcare autostart  processes here. Atleast one process must be autostarted;
-AUTOSTART_PROCESSES(&SEVEN1, &SEVEN2);
+TASK_AUTOSTART(&SEVEN1, &SEVEN2);
 
-PROCESS_THREAD(SEVEN1)
+TASK_RUN(SEVEN1)
 {
   // Declare all variables here, please read documentation to understand 
   // which variables should be declared as static variables            
@@ -76,7 +76,7 @@ PROCESS_THREAD(SEVEN1)
   END();
 }
 
-PROCESS_THREAD(SEVEN2)
+TASK_RUN(SEVEN2)
 {
   // Declare all variables here, please read documentation to understand 
   // which variables should be declared as static variables            
