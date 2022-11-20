@@ -1,13 +1,3 @@
-/*********************************************************
- **														**
- **		Company : DRMZ SYSTEM INNOVATIONS PVT LTD		**
- **     Project : Morey_os                              **
- **     Author  : Sudesh Morey                          **
- **     version : v1.4 									**
- **   	File    : SevenSegment.c						**
- **														**
- ********************************************************/ 
- 
 #include "SevenSegment.h"
 
 #ifdef PLATFORM_SUPPORT_DIGITAL_IO
