@@ -5,8 +5,8 @@
 // Declare all initialization functions of controller peripherals in the setup function below
 void setup(void)
 {    
-	Digital.pinmode(B0,OUTPUT);
-	Digital.pinmode(B5,OUTPUT);
+	Digital.pinmode(pin12,OUTPUT);
+	Digital.pinmode(pin13,OUTPUT);
 }
 
 // Delcare all processes here
@@ -26,10 +26,10 @@ TASK_RUN(LED1)
 
   while(1)
   {
-	Digital.write(B0,HIGH);
+	Digital.write(pin12,HIGH);
     DELAY_SEC_PRECISE(5);
 
-	Digital.write(B0,LOW);
+	Digital.write(pin12,LOW);
     DELAY_SEC_PRECISE(5);           
   }
   
@@ -47,10 +47,10 @@ TASK_RUN(LED2)
 
   while(1)
   {
-	Digital.write(B5,HIGH);
+	Digital.write(pin13,HIGH);
     DELAY_SEC_PRECISE(1);
 	
-	Digital.write(B5,LOW);
+	Digital.write(pin13,LOW);
     DELAY_SEC_PRECISE(3);            
   }
   
