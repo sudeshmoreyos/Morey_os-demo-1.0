@@ -44,6 +44,22 @@ TASK_RUN(lcd_test)
 		lcd_print(&lcd,"Morey_os");
 		DELAY_SEC_PRECISE(1); 
 	}
+	  
+	for(i=0;i<16;i++)
+	{
+		lcd_clear(&lcd);
+		lcd_setCursor(&lcd,i,0);
+		lcd_write(&lcd,'A');
+		DELAY_SEC_PRECISE(1); 
+	}
+	
+	for(i=0;i<16;i++)
+	{
+		lcd_clear(&lcd);
+		lcd_setCursor(&lcd,i,1);
+		lcd_write(&lcd,'A');
+		DELAY_SEC_PRECISE(1); 
+	}
 	
   }
   
