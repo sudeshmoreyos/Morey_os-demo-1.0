@@ -1,5 +1,15 @@
 #include "../../drivers/avr_mega_timer_delay.h"
 
+#ifdef TIMER_DELAY_HELP_ENABLE	
+	#if TIMER_TYPE == TIMER_0
+		#warning Available Timer numbers are : TIMER_DELAY1, TIMER_DELAY2. OS scheduler uses TIMER0 hence TIMER_DELAY0 is not available
+	#elif TIMER_TYPE == TIMER_1
+		#warning Available Timer numbers are : TIMER_DELAY0, TIMER_DELAY2. OS scheduler uses TIMER1 hence TIMER_DELAY1 is not available
+	#elif TIMER_TYPE == TIMER_2
+		#warning Available Timer numbers are : TIMER_DELAY0, TIMER_DELAY1. OS scheduler uses TIMER2 hence TIMER_DELAY2 is not available
+	#endif
+#endif
+
 #if ((COMPILER == AVR_STUDIO) || (COMPILER == WIN_AVR ) || (COMPILER == AVR_GCC ) )
 	#include <avr/interrupt.h>
 #endif
