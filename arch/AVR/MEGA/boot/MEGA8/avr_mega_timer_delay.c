@@ -169,6 +169,49 @@ static void begin (mos_uint8_t timer_no , float timer_delay_ms, void (*timer_del
 	#endif
 }
 
+static void end (mos_uint8_t timer_no)
+{	
+	#if TIMER_TYPE != TIMER_0
+		if( timer_no == TIMER_0 )
+		{
+			TCCR0=(0<<CS02) | (0<<CS01) | (0<<CS00);
+			TCNT0=0x00;
+			
+			TIMSK &= ~(1<<TOIE0);
+		}
+	#endif
+
+	#if TIMER_TYPE != TIMER_1	
+		if( timer_no == TIMER_1 )
+		{	
+			TCCR1A=(0<<COM1A1) | (0<<COM1A0) | (0<<COM1B1) | (0<<COM1B0) | (0<<WGM11) | (0<<WGM10);
+			TCCR1B=(0<<ICNC1) | (0<<ICES1) | (0<<WGM13) | (0<<WGM12) | (0<<CS12) | (0<<CS11) | (0<<CS10);
+			TCNT1H=0x00;
+			TCNT1L=0x00;
+			ICR1H=0x00;
+			ICR1L=0x00;
+			OCR1AH=0x00;
+			OCR1AL=0x00;
+			OCR1BH=0x00;
+			OCR1BL=0x00;			
+			
+			TIMSK &= ~(1<<OCIE1A);
+		}
+	#endif
+	
+	#if TIMER_TYPE != TIMER_2
+		if( timer_no == TIMER_2 )
+		{	
+			ASSR=0<<AS2;
+			TCCR2=(0<<WGM20) | (0<<COM21) | (0<<COM20) | (0<<WGM21) | (0<<CS22) | (0<<CS21) | (0<<CS20);
+			TCNT2=0x00;
+			OCR2=0x00;
+			
+			TIMSK &= ~(1<<OCIE2);
+		}
+	#endif
+}
+
 #if TIMER_TYPE != TIMER_0
 	ISR(TIMER0_OVF_vect)
 	{
@@ -207,6 +250,6 @@ static void begin (mos_uint8_t timer_no , float timer_delay_ms, void (*timer_del
 #endif
 
 const struct timer_delay_driver avr_mega_timer_delay_driver = {
-	begin
+	begin,
+	end
 };
-
