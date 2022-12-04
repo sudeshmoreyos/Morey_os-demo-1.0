@@ -1,24 +1,5 @@
 #include "../../drivers/avr_mega_timer_delay.h"
 
-#ifdef TIMER_DELAY_WARNING_ENABLE
-	
-	#if TIMER_TYPE == TIMER_0
-	#warning "Morey OS scheduler clock is depedent on TIMER_0. Hence either use TIMER_1 or TIMER_2 \
-	in TimerDelay.begin function or change OS timer using TIMER_TYPE_CONF Macro."
-	#endif
-	
-	#if TIMER_TYPE == TIMER_1
-	#warning "Morey OS scheduler clock is depedent on TIMER_1. Hence either use TIMER_0 or TIMER_2 \
-	in TimerDelay.begin function or change OS timer using TIMER_TYPE_CONF Macro."
-	#endif
-	
-	#if TIMER_TYPE == TIMER_2
-	#warning "Morey OS scheduler clock is depedent on TIMER_2. Hence either use TIMER_0 or TIMER_1 \
-	in TimerDelay.begin function or change OS timer using TIMER_TYPE_CONF Macro."
-	#endif
-	
-#endif
-
 #if ((COMPILER == AVR_STUDIO) || (COMPILER == WIN_AVR ) || (COMPILER == AVR_GCC ) )
 	#include <avr/interrupt.h>
 #endif
