@@ -8,7 +8,7 @@ Morey_os is an extremely light weight operating system for embedded controllers.
 
 Morey_os architechture broadly consists of three parts :
 1. **Kernel** : Modified and trimmed down version of popular **contiki os kernel**, supporting only **cooperative threads**, implemented using files like process.h, ptimer.h (modified event timer) and clock.h. In future versions, this kernel can be replaced by more advance pre-emptive threads as well.
-2. **OS drivers and libs** : Controller architechture independent Morey_os drivers and libraries like Serial.h , Digital.h, lcd.h, etc.
+2. **OS drivers and libs** : Controller architechture independent Morey_os drivers and libraries like Serial.h , Digital.h, LiquidCrystal.h, etc.
 3. **Porting files** : Files to implement controller architechture dependent drivers and libraries. 
 
 **Why Morey_OS?**
@@ -26,7 +26,7 @@ Morey_os architechture broadly consists of three parts :
 Morey_os is still under development. To know supported features and supported controllers/architectures of latest version please refer to "Current Version" section. This sections mentions all intended features of Morey_os :
 
 1. Multi-Tasking capabilities
-2. If multi-tasking is not required, i.e. a code has only one thread or process or loop, OS features can be removed to minimize code size. 
+2. If multi-tasking is not required, i.e. a code has only one thread or task or loop, OS features can be removed to minimize code size. 
 3. Should support all controllers of any selected architechture. For example, AVR 8 Bit controllers may be broadly classified into three series namely Mega series, Xmega series and Mega0 series. So for mega series, OS should provide support for all controllers like atmega8, atmega88, atmega16, atmega162, atmega164, atmega32, atmega328, etc.
 4. 100% portable code across controllers and architectures, only limited by capabilities of controllers itself.
 5. Should support coding of both controllers or boards. Means OS should support programming of atmega328p controller as well as Arduino UNO or Arduino Mega boards based on atmega328P or atmega2560 controllers
