@@ -42,3 +42,10 @@ Morey_os is still under development. To know supported features and supported co
 1. Latest version is named as **Morey_os-demo-1.0** where digit before dot represents main version number while digit after dot represent sub-versions.
 2. Current version provides support for Arduino Uno. This version is launched as demo version just for demonstration purposes to relevant stakeholders.
 3. A full version Morey_os is already in the intermediate stage of development and is expected to be launched within a few months.
+
+**Wiki Tutorials**
+
+Dont miss wiki tutorials to explore more about Morey_os. 
+
+https://github.com/sudeshmoreyos/Morey_os-demo-1.0/wiki
+
