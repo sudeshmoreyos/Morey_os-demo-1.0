@@ -1,7 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define COMPILER AVR_STUDIO
+#define COMPILER AVR_GCC
 #define TIMER_DELAY_HELP_ENABLE
 
 #endif
