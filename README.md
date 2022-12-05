@@ -45,7 +45,5 @@ Morey_os is still under development. To know supported features and supported co
 
 **Wiki Tutorials**
 
-Dont miss wiki tutorials to explore more about Morey_os. 
-
-https://github.com/sudeshmoreyos/Morey_os-demo-1.0/wiki
+Dont miss wiki tutorials to explore more about Morey_os : https://github.com/sudeshmoreyos/Morey_os-demo-1.0/wiki
 
