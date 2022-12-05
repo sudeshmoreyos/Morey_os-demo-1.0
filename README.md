@@ -1,5 +1,7 @@
 # Morey_os
 
+Gettting started Tutorials : https://github.com/sudeshmoreyos/Morey_os-demo-1.0/wiki
+
 **What is Morey_os?**
 
 Morey_os is an extremely light weight operating system for embedded controllers. Simply, Morey_os is designed as a **multi-tasking version** of popular **Arduino programming style**, with one **setup** function and multiple independently running **loop** functions named as **Tasks**. A Full version OS fits in minimum of 4K ROM and 256 bytes of RAM. Hence it can support even very low resource controllers like Atmega8 with 8K ROM and 1K RAM. 
