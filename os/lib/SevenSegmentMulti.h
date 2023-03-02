@@ -30,9 +30,7 @@ void SevenSegmentMulti_printDot(SevenSegmentMulti_t * seven_segment_multi_obj, m
 	mos_uint8_t * dot_position);
 void SevenSegmentMulti_printDotReverse(SevenSegmentMulti_t * seven_segment_multi_obj, mos_uint16_t number,\
 	mos_uint8_t * dot_position, mos_uint8_t * reverse_position);
-void SevenSegmentMulti_printDigits(SevenSegmentMulti_t * seven_segment_multi_obj, mos_uint16_t * digits);
 void SevenSegmentMulti_callback(SevenSegmentMulti_t * seven_segment_multi_obj);
-//void SevenSegment_custom_print (struct seven_segment_struct * seven_segment_obj, mos_uint8_t * custom_data);
 	
 #endif
 #endif
