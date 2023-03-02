@@ -1,6 +1,6 @@
 // Declare here all header files used in the code.h , OS related files are included by default
 #include "morey_os.h"
-#include "drivers/Digital.h"
+#include "Digital.h"
 
 // Declare all initialization functions of controller peripherals in the setup function below
 void setup(void)
@@ -27,10 +27,10 @@ TASK_RUN(LED1)
   while(1)
   {
 	Digital.write(pin12,HIGH);
-    DELAY_SEC_PRECISE(5);
+    	DELAY_SEC_PRECISE(5);
 
 	Digital.write(pin12,LOW);
-    DELAY_SEC_PRECISE(5);           
+    	DELAY_SEC_PRECISE(5);           
   }
   
   // process ends here
@@ -48,10 +48,10 @@ TASK_RUN(LED2)
   while(1)
   {
 	Digital.write(pin13,HIGH);
-    DELAY_SEC_PRECISE(1);
+    	DELAY_SEC_PRECISE(1);
 	
 	Digital.write(pin13,LOW);
-    DELAY_SEC_PRECISE(3);            
+    	DELAY_SEC_PRECISE(3);            
   }
   
   // process ends here
