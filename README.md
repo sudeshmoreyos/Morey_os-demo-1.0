@@ -57,3 +57,4 @@ Supported Boards :
 
 Dont miss wiki tutorials to explore more about Morey_os : https://github.com/sudeshmoreyos/Morey_os-demo-1.0/wiki
 
+Contact Email : sudesh.moreyos@gmail.com
