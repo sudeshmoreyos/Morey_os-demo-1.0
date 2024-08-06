@@ -3,8 +3,10 @@
 
 #include "compiler_list.h"
 
-#if ( (COMPILER == AVR_STUDIO) || (COMPILER == WIN_AVR) || (COMPILER == AVR_GCC ) || (COMPILER == CODEVISION_AVR ))
-	#define NULL (void*)(0x00)
+#if ( (COMPILER == AVR_STUDIO) || (COMPILER == WIN_AVR) || (COMPILER == AVR_GCC ))
+	#ifndef NULL
+		#define NULL (void*)(0x00)
+	#endif
 	typedef unsigned char mos_uint8_t;
 	typedef unsigned short int mos_uint16_t;
 	typedef unsigned long int mos_uint32_t ;
