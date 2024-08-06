@@ -1,0 +1,4 @@
+/** \addtogroup AVR
+*@{\defgroup MEGA
+*@}
+*/
