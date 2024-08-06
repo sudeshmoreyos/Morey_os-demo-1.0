@@ -1,10 +1,10 @@
 ifndef BOARD
-	ifndef CONTROLLER
-     $(error ERROR : Either CONTROLLER or BOARD Macro must be defined from command line)
-	else
+	ifdef CONTROLLER
 		ifndef ARCH
-         $(error ERROR : ARCH Macro must be defined from command line for selected CONTROLLER)
+			$(error ERROR : ARCH Macro must be defined from command line for selected CONTROLLER)
 		endif
+	else
+		$(error ERROR : Either CONTROLLER or BOARD Macro must be defined from command line)
 	endif
 endif
 
@@ -24,6 +24,9 @@ PATHDIR += $(MOREY_OS_PATH)/arch/$(CPU)/$(CPU_SERIES)/boot/$(CONTROLLER)
 # List C source files here. (C dependencies are automatically generated.)
 
 SRC = $(PROJECT).c
+ifdef INCLUDE_SOURCES
+	SRC += $(INCLUDE_SOURCES)
+endif
 SRC += $(MOREY_OS_PATH)/main.c
 
 include $(MOREY_OS_PATH)/os/Makefile.os
@@ -37,10 +40,25 @@ SRC += $(wildcard $(MOREY_OS_PATH)/arch/$(CPU)/$(CPU_SERIES)/drivers/*.c)
 SRC += $(wildcard $(MOREY_OS_PATH)/arch/$(CPU)/$(CPU_SERIES)/lib/*.c)
 
 # List Object directory to save object files
-OBJDIR = obj
+ifdef ARCH
+	OBJDIR = build/$(ARCH)/$(CONTROLLER)/obj
+else
+	OBJDIR = build/$(BOARD)/obj
+endif
 
 # List Executable directory to save elf, hex, eep, etc. files
-EXEDIR = exe
+ifdef ARCH
+	EXEDIR = build/$(ARCH)/$(CONTROLLER)/exe
+else
+	EXEDIR = build/$(BOARD)/exe
+endif
+
+# List .dep directory to save dependencies
+ifdef ARCH
+	DEPDIR = build/$(ARCH)/$(CONTROLLER)/.dep
+else
+	DEPDIR = build/$(BOARD)/.dep
+endif
 
 EXTRAINCDIRS = $(MOREY_OS_PATH) $(MOREY_OS_PATH)/os $(MOREY_OS_PATH)/os/drivers
 
@@ -151,7 +169,7 @@ SOURCES := $(notdir $(SRC))
 OBJ := $(patsubst %.c,$(OBJDIR)/%.o, $(SOURCES))
 
 # Compiler flags to generate dependency files.
-GENDEPFLAGS = -MMD -MP -MF .dep/$(@F).d
+GENDEPFLAGS = -MMD -MP -MF $(DEPDIR)/$(@F).d
 
 # Combine all necessary flags and optional flags.
 # Add target processor to flags.
@@ -159,8 +177,10 @@ ALL_CFLAGS = -mmcu=$(MCU) -I. $(CFLAGS) $(GENDEPFLAGS)
 
 # Default target.
 all: begin gccversion sizebefore build sizeafter end
+#all: begin gccversion build end
 
 program: begin gccversion sizebefore build sizeafter program_text program_avrdude end
+
 
 # Change the build target to build a HEX file or a library.
 build: elf hex eep
@@ -203,13 +223,36 @@ gccversion :
 # Program the device. 
 ifdef PROGRAMMER
 ifdef PORT
+
+ifeq ($(PROGRAMMER),usbasp)
+
 ifndef FORCE
 program_avrdude:
-	@avrdude -c $(PROGRAMMER) -p $(MCU_AVRDUDE) -P $(PORT) -U flash:w:"./exe/$(PROJECT).hex":a
+	@avrdude -c $(PROGRAMMER) -p $(MCU_AVRDUDE) -P $(PORT) -B 20.96 -U flash:w:"./$(EXEDIR)/$(PROJECT).hex":a
 else
 program_avrdude:
-	@avrdude -c $(PROGRAMMER) -p $(MCU_AVRDUDE) -P $(PORT) -F -U flash:w:"./exe/$(PROJECT).hex":a
+	@avrdude -c $(PROGRAMMER) -p $(MCU_AVRDUDE) -P $(PORT) -B 20.96 -F -U flash:w:"./$(EXEDIR)/$(PROJECT).hex":a
 endif
+
+else 
+
+ifndef FORCE
+program_avrdude:
+	@avrdude -c $(PROGRAMMER) -p $(MCU_AVRDUDE) -P $(PORT) -U flash:w:"./$(EXEDIR)/$(PROJECT).hex":a
+else
+program_avrdude:
+	@avrdude -c $(PROGRAMMER) -p $(MCU_AVRDUDE) -P $(PORT) -F -U flash:w:"./$(EXEDIR)/$(PROJECT).hex":a
+endif
+
+endif
+
+ifeq ($(PROGRAMMER),wiring)
+
+program_avrdude:
+	@avrdude -c $(PROGRAMMER) -p $(MCU_AVRDUDE) -P $(PORT) -B 20.96 -D -U flash:w:"./$(EXEDIR)/$(PROJECT).hex":a
+
+endif
+
 else
 program_avrdude:
 	@echo Error : PORT not defined
@@ -248,9 +291,18 @@ clean: begin clean_list end
 clean_list :
 	@echo
 	@echo $(MSG_CLEANING)
-	$(REMOVEDIR) .dep
+	$(REMOVEDIR) $(DEPDIR)
 	$(REMOVEDIR) $(OBJDIR)
 	$(REMOVEDIR) $(EXEDIR)
+
+$(shell mkdir build 2>/dev/null)
+
+ifdef ARCH
+$(shell mkdir build/$(ARCH) 2>/dev/null)
+$(shell mkdir build/$(ARCH)/$(CONTROLLER) 2>/dev/null)
+else
+$(shell mkdir build/$(BOARD) 2>/dev/null)
+endif
 
 # Create object files directory
 $(shell mkdir $(OBJDIR) 2>/dev/null)
@@ -259,7 +311,7 @@ $(shell mkdir $(OBJDIR) 2>/dev/null)
 $(shell mkdir $(EXEDIR) 2>/dev/null)
 
 # Include the dependency files.
--include $(shell mkdir .dep 2>/dev/null) $(wildcard .dep/*)
+-include $(shell mkdir $(DEPDIR) 2>/dev/null) $(wildcard $(DEPDIR)/*)
 
 
 # Listing of phony targets.

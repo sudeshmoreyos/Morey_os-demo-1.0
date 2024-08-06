@@ -1,7 +1,7 @@
 #include "morey_os.h"
 
 void setup(void);
-extern struct process * autostart_processes[];
+extern struct task_struct_os * autostart_tasks[];
 #ifdef DISABLE_OS
 	void loop(void);
 #endif
