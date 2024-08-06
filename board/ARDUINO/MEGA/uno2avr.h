@@ -1,5 +1,3 @@
-#include "../../../arch/AVR/MEGA/boot/MEGA328P/controller_macros.h"
-
 #define pin0 D0
 #define pin1 D1
 #define pin2 D2
@@ -36,5 +34,3 @@
 #define pina3 pinA3
 #define pina4 pinA4
 #define pina5 pinA5
-
-#define LED_BUILTIN pin13

@@ -1,5 +1,7 @@
-#include "../../../arch/AVR/MEGA/boot/MEGA328P/controller_macros.h"
+#include "../../../arch/AVR/MEGA/boot/MEGA2560/controller_macros.h"
 
+// Pin definitions is copied from arduino uno
+// To do : Update pin definations for arduino mega
 #define pin0 D0
 #define pin1 D1
 #define pin2 D2
