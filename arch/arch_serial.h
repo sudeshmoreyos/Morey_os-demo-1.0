@@ -2,8 +2,17 @@
 #define ARCH_SERIAL_H
 
 #ifdef PLATFORM_SUPPORT_UART
-	#if CPU == AVR
+	#if CPU == AVR		
 		#if CPU_SERIES == MEGA		
+			#ifdef PLATFORM_SUPPORT_CONST_PRINT
+				#include "avr/pgmspace.h"		
+				#define constPrint(x) 	constPrintArch(PSTR(x))
+				#define constPrintln(x) constPrintlnArch(PSTR(x))
+			#else
+				#define constPrint(x) 	Print(x)
+				#define constPrintln(x) Println(x)
+			#endif
+			
 			#ifdef UART_AVAILABLE
 				#include "AVR/MEGA/drivers/avr_mega_uart.h"
 			#endif
@@ -25,7 +34,15 @@
 			#endif
 			
 		#elif CPU_SERIES == XMEGA
-		
+			#ifdef PLATFORM_SUPPORT_CONST_PRINT
+				#include "avr/pgmspace.h"		
+				#define constPrint(x) 	constPrintArch(PSTR(x))
+				#define constPrintln(x) constPrintlnArch(PSTR(x))
+			#else
+				#define constPrint(x) 	Print(x)
+				#define constPrintln(x) Println(x)
+			#endif
+			
 			#ifdef UARTC0_AVAILABLE				
 				#include "AVR/XMEGA/drivers/avr_xmega_uartc0.h"				
 			#endif
