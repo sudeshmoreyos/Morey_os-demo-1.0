@@ -1,11 +1,27 @@
+/**\addtogroup sources_MEGA8
+* @{ \defgroup avr_mega_timer_delay_MEGA8_c
+* @{
+* \brief Documentaion of avr_mega_timer_delay.c source file for atmega8 controller.   
+* \author Sudesh Morey <sudesh.moreyos@gmail.com>
+*
+* This source file implements TIMER Delay functions for atmega8 controller.
+* @}
+*/
+
 #include "../../drivers/avr_mega_timer_delay.h"
 
+#ifdef TIMER_DELAY_ENABLE
+
+#ifndef OS_TIMER_TYPE
+	#define OS_TIMER_TYPE -1
+#endif
+
 #ifdef TIMER_DELAY_HELP_ENABLE	
-	#if TIMER_TYPE == TIMER_0
+	#if OS_TIMER_TYPE == TIMER_0
 		#warning Available Timer numbers are : TIMER_DELAY1, TIMER_DELAY2. OS scheduler uses TIMER0 hence TIMER_DELAY0 is not available
-	#elif TIMER_TYPE == TIMER_1
+	#elif OS_TIMER_TYPE == TIMER_1
 		#warning Available Timer numbers are : TIMER_DELAY0, TIMER_DELAY2. OS scheduler uses TIMER1 hence TIMER_DELAY1 is not available
-	#elif TIMER_TYPE == TIMER_2
+	#elif OS_TIMER_TYPE == TIMER_2
 		#warning Available Timer numbers are : TIMER_DELAY0, TIMER_DELAY1. OS scheduler uses TIMER2 hence TIMER_DELAY2 is not available
 	#endif
 #endif
@@ -14,24 +30,24 @@
 	#include <avr/interrupt.h>
 #endif
 
-#if TIMER_TYPE != TIMER_0
+#if OS_TIMER_TYPE != TIMER_0
 	static void (*callback0)(void);
-	mos_uint16_t count0=0, count0_max=0;
+	static mos_uint16_t count0=0, count0_max=0;
 #endif
 
-#if TIMER_TYPE != TIMER_1
+#if OS_TIMER_TYPE != TIMER_1
 	static void (*callback1)(void);
-	mos_uint16_t count1=0, count1_max=0;
+	static mos_uint16_t count1=0, count1_max=0;
 #endif
 
-#if TIMER_TYPE != TIMER_2
+#if OS_TIMER_TYPE != TIMER_2
 	static void (*callback2)(void);
-	mos_uint16_t count2=0, count2_max=0;
+	static mos_uint16_t count2=0, count2_max=0;
 #endif
 
 static void begin (mos_uint8_t timer_no , float timer_delay_ms, void (*timer_delay_callback)(void))
 {	
-	#if TIMER_TYPE != TIMER_0
+	#if OS_TIMER_TYPE != TIMER_0
 		if( timer_no == TIMER_0 )
 		{
 			#if CONTROLLER_FREQ == 16000000UL
@@ -60,53 +76,37 @@ static void begin (mos_uint8_t timer_no , float timer_delay_ms, void (*timer_del
 		}
 	#endif
 
-	#if TIMER_TYPE != TIMER_1	
+	#if OS_TIMER_TYPE != TIMER_1	
 		if( timer_no == TIMER_1 )
 		{	
 			#if CONTROLLER_FREQ == 16000000UL
 				TCCR1A=(0<<COM1A1) | (0<<COM1A0) | (0<<COM1B1) | (0<<COM1B0) | (0<<WGM11) | (0<<WGM10);
 				TCCR1B=(0<<ICNC1) | (0<<ICES1) | (0<<WGM13) | (1<<WGM12) | (0<<CS12) | (1<<CS11) | (0<<CS10);
-				TCNT1H=0x00;
-				TCNT1L=0x00;
-				ICR1H=0x00;
-				ICR1L=0x00;
-				OCR1AH=0x00;
-				OCR1AL=0xC7;
-				OCR1BH=0x00;
-				OCR1BL=0x00;
+				TCNT1=0x0000;
+				ICR1=0x0000;
+				OCR1A=0x00C7;
+				OCR1B=0x0000;
 			#elif CONTROLLER_FREQ == 12000000UL
 				TCCR1A=(0<<COM1A1) | (0<<COM1A0) | (0<<COM1B1) | (0<<COM1B0) | (0<<WGM11) | (0<<WGM10);
 				TCCR1B=(0<<ICNC1) | (0<<ICES1) | (0<<WGM13) | (1<<WGM12) | (0<<CS12) | (1<<CS11) | (0<<CS10);
-				TCNT1H=0x00;
-				TCNT1L=0x00;
-				ICR1H=0x00;
-				ICR1L=0x00;
-				OCR1AH=0x00;
-				OCR1AL=0x95;
-				OCR1BH=0x00;
-				OCR1BL=0x00;
+				TCNT1=0x0000;
+				ICR1=0x0000;
+				OCR1A=0x0095;
+				OCR1B=0x0000;
 			#elif CONTROLLER_FREQ == 8000000UL
 				TCCR1A=(0<<COM1A1) | (0<<COM1A0) | (0<<COM1B1) | (0<<COM1B0) | (0<<WGM11) | (0<<WGM10);
 				TCCR1B=(0<<ICNC1) | (0<<ICES1) | (0<<WGM13) | (1<<WGM12) | (0<<CS12) | (1<<CS11) | (0<<CS10);
-				TCNT1H=0x00;
-				TCNT1L=0x00;
-				ICR1H=0x00;
-				ICR1L=0x00;
-				OCR1AH=0x00;
-				OCR1AL=0x63;
-				OCR1BH=0x00;
-				OCR1BL=0x00;
+				TCNT1=0x0000;
+				ICR1=0x0000;
+				OCR1A=0x0063;
+				OCR1B=0x0000;
 			#elif CONTROLLER_FREQ == 1000000UL
 				TCCR1A=(0<<COM1A1) | (0<<COM1A0) | (0<<COM1B1) | (0<<COM1B0) | (0<<WGM11) | (0<<WGM10);
 				TCCR1B=(0<<ICNC1) | (0<<ICES1) | (0<<WGM13) | (1<<WGM12) | (0<<CS12) | (0<<CS11) | (1<<CS10);
-				TCNT1H=0x00;
-				TCNT1L=0x00;
-				ICR1H=0x00;
-				ICR1L=0x00;
-				OCR1AH=0x00;
-				OCR1AL=0x63;
-				OCR1BH=0x00;
-				OCR1BL=0x00;
+				TCNT1=0x0000;
+				ICR1=0x0000;
+				OCR1A=0x0063;
+				OCR1B=0x0000;
 			#endif
 			
 			if( timer_delay_ms*10 > 65500 )
@@ -122,7 +122,7 @@ static void begin (mos_uint8_t timer_no , float timer_delay_ms, void (*timer_del
 		}
 	#endif
 	
-	#if TIMER_TYPE != TIMER_2
+	#if OS_TIMER_TYPE != TIMER_2
 		if( timer_no == TIMER_2 )
 		{	
 			#if CONTROLLER_FREQ == 16000000UL
@@ -162,7 +162,7 @@ static void begin (mos_uint8_t timer_no , float timer_delay_ms, void (*timer_del
 
 static void end (mos_uint8_t timer_no)
 {	
-	#if TIMER_TYPE != TIMER_0
+	#if OS_TIMER_TYPE != TIMER_0
 		if( timer_no == TIMER_0 )
 		{
 			TCCR0=(0<<CS02) | (0<<CS01) | (0<<CS00);
@@ -172,25 +172,21 @@ static void end (mos_uint8_t timer_no)
 		}
 	#endif
 
-	#if TIMER_TYPE != TIMER_1	
+	#if OS_TIMER_TYPE != TIMER_1	
 		if( timer_no == TIMER_1 )
 		{	
 			TCCR1A=(0<<COM1A1) | (0<<COM1A0) | (0<<COM1B1) | (0<<COM1B0) | (0<<WGM11) | (0<<WGM10);
 			TCCR1B=(0<<ICNC1) | (0<<ICES1) | (0<<WGM13) | (0<<WGM12) | (0<<CS12) | (0<<CS11) | (0<<CS10);
-			TCNT1H=0x00;
-			TCNT1L=0x00;
-			ICR1H=0x00;
-			ICR1L=0x00;
-			OCR1AH=0x00;
-			OCR1AL=0x00;
-			OCR1BH=0x00;
-			OCR1BL=0x00;			
+			TCNT1=0x00;
+			ICR1=0x00;
+			OCR1A=0x00;
+			OCR1B=0x00;
 			
 			TIMSK &= ~(1<<OCIE1A);
 		}
 	#endif
 	
-	#if TIMER_TYPE != TIMER_2
+	#if OS_TIMER_TYPE != TIMER_2
 		if( timer_no == TIMER_2 )
 		{	
 			ASSR=0<<AS2;
@@ -203,10 +199,18 @@ static void end (mos_uint8_t timer_no)
 	#endif
 }
 
-#if TIMER_TYPE != TIMER_0
+#if OS_TIMER_TYPE != TIMER_0
 	ISR(TIMER0_OVF_vect)
 	{
-		TCNT0=0x38;
+		#if CONTROLLER_FREQ == 16000000UL
+			TCNT0=0x38;
+		#elif CONTROLLER_FREQ == 12000000UL
+			TCNT0=0x6A;
+		#elif CONTROLLER_FREQ == 8000000UL
+			TCNT0=0x9C;
+		#elif CONTROLLER_FREQ == 1000000UL
+			TCNT0=0x9C;
+		#endif
 		count0++;
 		if(count0 >= count0_max)
 		{
@@ -216,7 +220,7 @@ static void end (mos_uint8_t timer_no)
 	}
 #endif
 
-#if TIMER_TYPE != TIMER_1
+#if OS_TIMER_TYPE != TIMER_1
 	ISR(TIMER1_COMPA_vect)
 	{
 		count1++;
@@ -228,7 +232,7 @@ static void end (mos_uint8_t timer_no)
 	}
 #endif
 
-#if TIMER_TYPE != TIMER_2
+#if OS_TIMER_TYPE != TIMER_2
 	ISR(TIMER2_COMP_vect)
 	{
 		count2++;
@@ -244,3 +248,10 @@ const struct timer_delay_driver avr_mega_timer_delay_driver = {
 	begin,
 	end
 };
+
+#if OS_TIMER_TYPE == -1
+	#undef OS_TIMER_TYPE
+#endif
+
+#endif
+

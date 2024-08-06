@@ -1,6 +1,5 @@
-/**\addtogroup MEGA8
-* @{ \defgroup controller_macros_mega8_h
-* @{ \addtogroup controller_macros_mega8_h
+/**\addtogroup headers_MEGA8
+* @{ \defgroup controller_macros_MEGA8_h
 * @{
 * \brief Documentaion of controller_macros header file for atmega8 controller.   
 * \author Sudesh Morey <sudesh.moreyos@gmail.com>
@@ -73,15 +72,28 @@
 
 // Declare Macros for Serial UART supported by controller/platform
 #define PLATFORM_SUPPORT_UART
+#define PLATFORM_SUPPORT_CONST_PRINT
 #define UART_AVAILABLE
 
 #define UART_PORT 0
+
+// No need to define uart interrupts, they are default values of UART driver
+//#define MCU_UART_RX_INTERRUPT_ISR	USART_RXC_vect
+//#define MCU_UART_TX_INTERRUPT_ISR1	USART_UDRE_vect
 
 // UART0 to UART3 ports are not available in atmega8 controller
 //#define UART0_PORT 1
 //#define UART1_PORT 2
 //#define UART2_PORT 3
 //#define UART3_PORT 4
+
+#ifdef SERIAL_PORT_CONF
+	#define SERIAL_PORT SERIAL_PORT_CONF
+#endif
+
+#ifdef SERIAL0_PORT_CONF
+	#define SERIAL0_PORT SERIAL0_PORT_CONF
+#endif
 
 #ifdef SERIAL_PORT
 	#define SERIAL0_PORT SERIAL_PORT
@@ -162,12 +174,73 @@
 
 // Declare Macros for I2C supported by controller/platform
 #define PLATFORM_SUPPORT_I2C
+#define I2C_AVAILABLE
+
+#define I2C_SLAVE_RX_BUFFER_DEFAULT	64
+#define I2C_SLAVE_TX_BUFFER_DEFAULT 	64
+
+// Declare Macros for SPI supported by controller/platform
+#define PLATFORM_SUPPORT_SPI
+#define SPI_AVAILABLE
+
+#define SPI_SS_PIN 	B2
+#define SPI_MOSI_PIN 	B3
+#define SPI_MISO_PIN 	B4
+#define SPI_SCK_PIN	B5
+
+#define SPI_PORT 	0
+
+// SPI0_PORT & SPI1_PORT is not available in atmega8 controller
+// #define SPI1_PORT 1
+// #define SPI1_PORT 2
+
+#ifdef SPI_PORT_CONF
+	#define SPI0_PORT_CONF SPI_PORT_CONF
+#endif
+
+#ifndef SPI0_PORT_CONF
+	#define SPI0_PORT_CONF SPI_PORT
+#endif
+
+// Checking for repeat declaration of SPI_SLAVE_ENABLE and SPI0_SLAVE_ENABLE
+#if defined(SPI_SLAVE_ENABLE) && defined(SPI0_SLAVE_ENABLE)
+	#error Either declare SPI_SLAVE_ENABLE or SPI0_SLAVE_ENABLE to configure SPI0
+#endif
+
+#ifdef SPI_SLAVE_ENABLE
+	#define SPI0_SLAVE_ENABLE SPI_SLAVE_ENABLE
+#endif
 
 // Declare Macros for Timer Delay supported by controller/platform
 #define PLATFORM_SUPPORT_TIMER_DELAY
 #define TIMER_0 0
 #define TIMER_1 1
 #define TIMER_2 2
+
+#ifndef DISABLE_OS
+	#ifdef OS_TIMER_TYPE_CONF
+		#define OS_TIMER_TYPE OS_TIMER_TYPE_CONF
+	#else
+		#define OS_TIMER_TYPE TIMER_1
+	#endif
+
+	#if OS_TIMER_TYPE != TIMER_0
+		#define TIMER_DELAY0 TIMER_0
+	#endif
+
+	#if OS_TIMER_TYPE != TIMER_1
+		#define TIMER_DELAY1 TIMER_1
+	#endif
+
+	#if OS_TIMER_TYPE != TIMER_2
+		#define TIMER_DELAY2 TIMER_2
+	#endif
+
+#else
+	#define TIMER_DELAY0 TIMER_0
+	#define TIMER_DELAY1 TIMER_1
+	#define TIMER_DELAY2 TIMER_2
+#endif
 
 // Declare Macros for External Interrupt supported by controller/platform
 #define PLATFORM_SUPPORT_EXTERNAL_INTERRUPT
