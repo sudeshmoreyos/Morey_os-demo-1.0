@@ -1,21 +1,5 @@
 #include "rtc_ds3231.h"
 
-#ifdef PLATFORM_SUPPORT_I2C
-
-#ifndef RTC3231_I2C_PORT
-	#ifdef I2C
-		#define RTC3231_I2C_PORT I2C
-	#endif
-#endif
-
-#ifdef RTC3231_I2C_PORT
-
-#ifndef RTC3231_I2C_BAUD
-	#define RTC3231_I2C_BAUD 100000
-#endif
-
-#define I2C_PORT RTC3231_I2C_PORT
-#define I2C_BAUD RTC3231_I2C_BAUD
 #define SLAVE_ADDR 0x68
 #define TIME_REG_ADDR 0x00
 #define DATE_REG_ADDR 0x03
@@ -24,6 +8,8 @@
 #define ALARM1_REG_ADDR 0x07
 #define ALARM2_REG_ADDR 0x0B
 #define STATUS_REG_ADDR 0x0F
+
+static const struct i2c_master_driver * ds3231_i2c_port;
 
 static mos_uint8_t dec2bcd(mos_uint8_t dec)
 {
@@ -35,12 +21,15 @@ static mos_uint8_t bcd2dec(mos_uint8_t bcd)
 	return (bcd >> 4)*10 + (bcd & 0xF);		
 }
 
-mos_uint8_t rtc3231_begin(mos_uint8_t mode, mos_uint8_t mode_32khz)
+mos_uint8_t rtc3231_begin(const struct i2c_master_driver * i2c_port, mos_uint32_t i2c_baud, \
+			mos_uint8_t mode, mos_uint8_t mode_32khz)
 {
 	mos_uint8_t data_tx[3] = {CONTROL_REG_ADDR,0x00, 0X00};
 	
+	ds3231_i2c_port = i2c_port;
+	
 	// Initialize I2C
-	I2C_PORT.masterBegin(I2C_BAUD);
+	ds3231_i2c_port->begin(i2c_baud);
 	
 	// Set Control register values as per selected input mode
 	if(mode == RTC3231_INT_ENABLE)
@@ -61,7 +50,7 @@ mos_uint8_t rtc3231_begin(mos_uint8_t mode, mos_uint8_t mode_32khz)
 		data_tx[2] = 0x08;
 	
 	// Store Control register
-	return I2C_PORT.masterTransfer(SLAVE_ADDR, 3 , data_tx, 0 , data_tx);
+	return ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 3 , data_tx, 0);
 }
 
 mos_uint8_t rtc3231_setTime(mos_uint8_t hour, mos_uint8_t minute, mos_uint8_t second)
@@ -86,7 +75,7 @@ mos_uint8_t rtc3231_setTime(mos_uint8_t hour, mos_uint8_t minute, mos_uint8_t se
 	data_tx[3] = dec2bcd(hour);
 	
 	// Store Second, minute, hour, values
-	return I2C_PORT.masterTransfer(SLAVE_ADDR, 4 , data_tx, 0 , data_tx);	
+	return ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 4 , data_tx, 0);	
 }
 
 mos_uint8_t rtc3231_setDate(mos_uint8_t day, mos_uint8_t date, mos_uint8_t month, mos_uint8_t year)
@@ -116,7 +105,7 @@ mos_uint8_t rtc3231_setDate(mos_uint8_t day, mos_uint8_t date, mos_uint8_t month
 	data_tx[4] = dec2bcd(year);
 	
 	// Store day, date, month, year values
-	return I2C_PORT.masterTransfer(SLAVE_ADDR, 5 , data_tx, 0 , data_tx);
+	return ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 5 , data_tx, 0);
 		
 }
 
@@ -125,7 +114,7 @@ mos_uint8_t rtc3231_getTime(mos_uint8_t * hour, mos_uint8_t * minute, mos_uint8_
 	mos_uint8_t data_tx[1] = {TIME_REG_ADDR}, data_rx[3], status;
 	
 	// Read second, minute, hour values
-	status = I2C_PORT.masterTransfer(SLAVE_ADDR, 1 , data_tx, 3, data_rx);
+	status = ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 1, data_rx, 3);
 	
 	if(status == 0)
 	{
@@ -143,7 +132,7 @@ mos_uint8_t rtc3231_getDate(mos_uint8_t *day, mos_uint8_t * date, mos_uint8_t * 
 	static mos_uint8_t data_tx[1] = {DATE_REG_ADDR}, data_rx[4], status;
 	
 	// Read day, date, month, year values
-	status = I2C_PORT.masterTransfer(SLAVE_ADDR, 1 , data_tx, 4, data_rx);
+	status = ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 1, data_rx, 4);
 	
 	if(status == 0)
 	{
@@ -163,14 +152,14 @@ float rtc3231_getTemperature(void)
 	mos_int16_t temp;
 	
 	// Read temperature values
-	I2C_PORT.masterTransfer(SLAVE_ADDR, 1 , data_tx, 2, data_rx);	
+	ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 1, data_rx, 2);	
 	
 	// convert to float format
 	temp  = ( ((mos_int16_t)data_rx[0]) << 8 ) |  ( ((mos_int16_t)data_rx[1]) & 0xC0 );
     return (float)temp/ 256.0;	
 }
 
-#ifdef RTC3231_ALARM1_ENABLE
+//#ifdef RTC3231_ALARM1_ENABLE
 
 mos_uint8_t rtc3231_setAlarm1(mos_uint8_t mode, mos_uint8_t date_day, mos_uint8_t hour, mos_uint8_t minute, mos_uint8_t second)
 {
@@ -245,7 +234,7 @@ mos_uint8_t rtc3231_setAlarm1(mos_uint8_t mode, mos_uint8_t date_day, mos_uint8_
 	}
 	
 	// Store Alarm1 seconds, minute, hour, day_date values
-	status = I2C_PORT.masterTransfer(SLAVE_ADDR, 5 , data_tx, 0, data_rx);
+	status = ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 5, data_rx, 0);
 	
 	// If I2C write is Success
 	if(status == 0)
@@ -254,7 +243,7 @@ mos_uint8_t rtc3231_setAlarm1(mos_uint8_t mode, mos_uint8_t date_day, mos_uint8_
 		data_tx[0] = CONTROL_REG_ADDR;
 		
 		// Read current value of ds3231 control register
-		status = I2C_PORT.masterTransfer(SLAVE_ADDR, 1 , data_tx, 1, data_rx);
+		status = ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 1, data_rx, 1);
 		
 		// If I2C read is Success
 		if(status == 0 )
@@ -263,7 +252,7 @@ mos_uint8_t rtc3231_setAlarm1(mos_uint8_t mode, mos_uint8_t date_day, mos_uint8_
 			data_tx[1] = data_rx[0] | 0x01 ;
 			
 			// Write updated value of ds3231 control register 
-			status = I2C_PORT.masterTransfer(SLAVE_ADDR, 2 , data_tx, 0, data_rx);
+			status = ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 2, data_rx, 0);
 			
 			// If I2C write is success, status will be 0, hence 0 is returned
 			// If I2C write is failure, return I2C failure status
@@ -281,38 +270,38 @@ mos_uint8_t rtc3231_setAlarm1(mos_uint8_t mode, mos_uint8_t date_day, mos_uint8_
 mos_uint8_t rtc3231_getAlarm1(mos_uint8_t * mode, mos_uint8_t * date_day, mos_uint8_t * hour, mos_uint8_t * minute, mos_uint8_t * second)
 {
 	mos_uint8_t data_tx[1] = {ALARM1_REG_ADDR}, data_rx[4], status;
-	mos_uint8_t a1m1=0,a1m2=0,a1m3=0,a1m4=0,a1dydt=0b;
+	mos_uint8_t a1m1=0,a1m2=0,a1m3=0,a1m4=0,a1dydt=0;
 	
 	// Read Alarm1 seconds, minute, hour, day_date values
-	status = I2C_PORT.masterTransfer(SLAVE_ADDR, 1 , data_tx, 4, data_rx);
+	status = ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 1, data_rx, 4);
 	
 	// If I2C read is success
 	if(status==0)
 	{
 		// Read Alarm1 Mask1 value
-		if(data_tx[0] & (1<<7))
+		if(data_rx[0] & (1<<7))
 			a1m1=1;
 		// Read Alarm1 Mask2 value
-		if(data_tx[1] & (1<<7))
+		if(data_rx[1] & (1<<7))
 			a1m2=1;
 		
 		// Read Alarm1 Mask3 value
-		if(data_tx[2] & (1<<7))
+		if(data_rx[2] & (1<<7))
 			a1m3=1;
 		
 		// Read Alarm1 Mask4 value
-		if(data_tx[3] & (1<<7))
+		if(data_rx[3] & (1<<7))
 			a1m4=1;
 		
 		// Read Alarm1 DY/DT Mask value
-		if(data_tx[3] & (1<<6))
+		if(data_rx[3] & (1<<6))
 			a1dydt=1;
 		
 		// Write Alarm1 seconds, minute, hour, day_date values into output variables
-		*second = bcd2dec(data_tx[0] & 0x7F);
-		*minute = bcd2dec(data_tx[1] & 0x7F);
-		*hour = bcd2dec(data_tx[2] & 0x7F);
-		*date_day = bcd2dec(data_tx[3] & 0x3F);
+		*second = bcd2dec(data_rx[0] & 0x7F);
+		*minute = bcd2dec(data_rx[1] & 0x7F);
+		*hour = bcd2dec(data_rx[2] & 0x7F);
+		*date_day = bcd2dec(data_rx[3] & 0x3F);
 		
 		// Based on Alarm1 Mask values, write Alarm1 mode value into mode output variable
 		if(a1m4==1 && a1m3==1 && a1m2==1 && a1m1==1 )
@@ -341,7 +330,7 @@ mos_uint8_t rtc3231_isActiveAlarm1(void)
 	static mos_uint8_t data_tx[1] = {CONTROL_REG_ADDR}, data_rx[1], status;
 	
 	// Read current value of ds3231 control register
-	status = I2C_PORT.masterTransfer(SLAVE_ADDR, 1 , data_tx, 1, data_rx);
+	status = ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 1, data_rx, 1);
 	if(status == 0)
 	{
 		// If LSB bit of ds3231 control register is one, means alarm1 is active else not
@@ -361,7 +350,7 @@ mos_uint8_t rtc3231_isExpiredAlarm1(void)
 	static mos_uint8_t data_tx[1] = {STATUS_REG_ADDR}, data_rx[1], status;
 	
 	// Read current value of ds3231 status register
-	status = I2C_PORT.masterTransfer(SLAVE_ADDR, 1 , data_tx, 1, data_rx);
+	status = ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 1, data_rx, 1);
 	if(status == 0)
 	{
 		// If LSB bit of ds3231 status register is one, means alarm1 is expired else not
@@ -381,7 +370,7 @@ mos_uint8_t rtc3231_resetAlarm1( void )
 	static mos_uint8_t data_tx[2] = {STATUS_REG_ADDR,0x00}, data_rx[1], status;
 	
 	// Read current value of ds3231 status register
-	status = I2C_PORT.masterTransfer(SLAVE_ADDR, 1 , data_tx, 1, data_rx);
+	status = ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 1, data_rx, 1);
 	
 	// If I2C read success
 	if(status == 0 )
@@ -390,7 +379,7 @@ mos_uint8_t rtc3231_resetAlarm1( void )
 		data_tx[1] = data_rx[0] & 0xFE ;
 		
 		// Store updated value of ds3231 status register
-		status = I2C_PORT.masterTransfer(SLAVE_ADDR, 2 , data_tx, 0, data_rx);
+		status = ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 2, data_rx, 0);
 		
 		// If I2C write is success return 1 else 0
 		if(status == 0)
@@ -410,7 +399,7 @@ mos_uint8_t rtc3231_stopAlarm1( void )
 	static mos_uint8_t data_tx[2] = {CONTROL_REG_ADDR,0x00}, data_rx[1], status;
 	
 	// Read current value of ds3231 control register
-	status = I2C_PORT.masterTransfer(SLAVE_ADDR, 1 , data_tx, 1, data_rx);
+	status = ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 1, data_rx, 1);
 	
 	// If I2C read success
 	if(status == 0 )
@@ -419,7 +408,7 @@ mos_uint8_t rtc3231_stopAlarm1( void )
 		data_tx[1] = data_rx[0] & 0xFE ;
 		
 		// Store updated value of ds3231 control register
-		status = I2C_PORT.masterTransfer(SLAVE_ADDR, 2 , data_tx, 0, data_rx);
+		status = ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 2, data_rx, 0);
 		
 		// If I2C write is success return 1 else 0
 		if(status == 0)
@@ -434,9 +423,9 @@ mos_uint8_t rtc3231_stopAlarm1( void )
 	
 }
 
-#endif
+//#endif
 
-#ifdef RTC3231_ALARM2_ENABLE
+//#ifdef RTC3231_ALARM2_ENABLE
 
 mos_uint8_t rtc3231_setAlarm2(mos_uint8_t mode, mos_uint8_t date_day, mos_uint8_t hour, mos_uint8_t minute)
 {
@@ -498,7 +487,7 @@ mos_uint8_t rtc3231_setAlarm2(mos_uint8_t mode, mos_uint8_t date_day, mos_uint8_
 	}
 	
 	// Store Alarm2 minute, hour, day_date values
-	status = I2C_PORT.masterTransfer(SLAVE_ADDR, 4 , data_tx, 0, data_rx);
+	status = ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 4, data_rx, 0);
 	
 	// If I2C write is Success
 	if(status == 0)
@@ -507,7 +496,7 @@ mos_uint8_t rtc3231_setAlarm2(mos_uint8_t mode, mos_uint8_t date_day, mos_uint8_
 		data_tx[0] = CONTROL_REG_ADDR;
 		
 		// Read current value of ds3231 control register
-		status = I2C_PORT.masterTransfer(SLAVE_ADDR, 1 , data_tx, 1, data_rx);
+		status = ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 1, data_rx, 1);
 
 		// If I2C read is Success
 		if(status == 0 )
@@ -516,7 +505,7 @@ mos_uint8_t rtc3231_setAlarm2(mos_uint8_t mode, mos_uint8_t date_day, mos_uint8_
 			data_tx[1] = data_rx[0] | 0x02 ;
 			
 			// Write updated value of ds3231 control register 
-			status = I2C_PORT.masterTransfer(SLAVE_ADDR, 2 , data_tx, 0, data_rx);
+			status = ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 2, data_rx, 0);
 			
 			// If I2C write is success, status will be 0, hence 0 is returned
 			// If I2C write is failure, return I2C failure status
@@ -534,34 +523,34 @@ mos_uint8_t rtc3231_setAlarm2(mos_uint8_t mode, mos_uint8_t date_day, mos_uint8_
 mos_uint8_t rtc3231_getAlarm2(mos_uint8_t * mode, mos_uint8_t * date_day, mos_uint8_t * hour, mos_uint8_t * minute)
 {
 	mos_uint8_t data_tx[1] = {ALARM2_REG_ADDR}, data_rx[3], status;
-	mos_uint8_t a2m2=0,a2m3=0,a2m4=0,a2dydt=0b;
+	mos_uint8_t a2m2=0,a2m3=0,a2m4=0,a2dydt=0;
 	
 	// Read Alarm2 minute, hour, day_date values
-	status = I2C_PORT.masterTransfer(SLAVE_ADDR, 1 , data_tx, 3, data_rx);
+	status = ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 1, data_rx, 3);
 	
 	// If I2C read is success
 	if(status==0)
 	{
 		// Read Alarm2 Mask2 value
-		if(data_tx[0] & (1<<7))
+		if(data_rx[0] & (1<<7))
 			a2m2=1;
 		
 		// Read Alarm2 Mask3 value
-		if(data_tx[1] & (1<<7))
+		if(data_rx[1] & (1<<7))
 			a2m3=1;
 		
 		// Read Alarm2 Mask4 value
-		if(data_tx[2] & (1<<7))
+		if(data_rx[2] & (1<<7))
 			a2m4=1;
 		
 		// Read Alarm2 DY/DT Mask value
-		if(data_tx[2] & (1<<6))
+		if(data_rx[2] & (1<<6))
 			a2dydt=1;
 		
 		// Write Alarm2 minute, hour, day_date values into output variables
-		*minute = bcd2dec(data_tx[0] & 0x7F);
-		*hour = bcd2dec(data_tx[1] & 0x7F);
-		*date_day = bcd2dec(data_tx[2] & 0x3F);
+		*minute = bcd2dec(data_rx[0] & 0x7F);
+		*hour = bcd2dec(data_rx[1] & 0x7F);
+		*date_day = bcd2dec(data_rx[2] & 0x3F);
 		
 		// Based on Alarm2 Mask values, write Alarm2 mode value into mode output variable
 		if(a2m4==1 && a2m3==1 && a2m2==1)
@@ -588,7 +577,7 @@ mos_uint8_t rtc3231_isActiveAlarm2(void)
 	static mos_uint8_t data_tx[1] = {CONTROL_REG_ADDR}, data_rx[1], status;
 	
 	// Read current value of ds3231 control register
-	status = I2C_PORT.masterTransfer(SLAVE_ADDR, 1 , data_tx, 1, data_rx);
+	status = ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 1, data_rx, 1);
 	if(status == 0)
 	{
 		// If 1st bit of ds3231 control register is one, means alarm2 is active else not
@@ -608,7 +597,7 @@ mos_uint8_t rtc3231_isExpiredAlarm2(void)
 	static mos_uint8_t data_tx[1] = {STATUS_REG_ADDR}, data_rx[1], status;
 	
 	// Read current value of ds3231 status register
-	status = I2C_PORT.masterTransfer(SLAVE_ADDR, 1 , data_tx, 1, data_rx);
+	status = ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 1, data_rx, 1);
 	if(status == 0)
 	{
 		// If 1st bit of ds3231 status register is one, means alarm2 is expired else not
@@ -628,7 +617,7 @@ mos_uint8_t rtc3231_resetAlarm2( void )
 	static mos_uint8_t data_tx[2] = {STATUS_REG_ADDR,0x00}, data_rx[1], status;
 	
 	// Read current value of ds3231 status register
-	status = I2C_PORT.masterTransfer(SLAVE_ADDR, 1 , data_tx, 1, data_rx);
+	status = ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 1, data_rx, 1);
 	
 	// If I2C read success
 	if(status == 0 )
@@ -637,7 +626,7 @@ mos_uint8_t rtc3231_resetAlarm2( void )
 		data_tx[1] = data_rx[0] & 0xFD ;
 		
 		// Store updated value of ds3231 status register
-		status = I2C_PORT.masterTransfer(SLAVE_ADDR, 2 , data_tx, 0, data_rx);
+		status = ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 2, data_rx, 0);
 		
 		// If I2C write is success return 1 else 0
 		if(status == 0)
@@ -657,7 +646,7 @@ mos_uint8_t rtc3231_stopAlarm2( void )
 	static mos_uint8_t data_tx[2] = {CONTROL_REG_ADDR,0x00}, data_rx[1], status;
 	
 	// Read current value of ds3231 control register
-	status = I2C_PORT.masterTransfer(SLAVE_ADDR, 1 , data_tx, 1, data_rx);
+	status = ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 1, data_rx, 1);
 	
 	// If I2C read success
 	if(status == 0 )
@@ -666,7 +655,7 @@ mos_uint8_t rtc3231_stopAlarm2( void )
 		data_tx[1] = data_rx[0] & 0xFD ;
 		
 		// Store updated value of ds3231 control register
-		status = I2C_PORT.masterTransfer(SLAVE_ADDR, 2 , data_tx, 0, data_rx);
+		status = ds3231_i2c_port->transfer(SLAVE_ADDR, data_tx, 2, data_rx, 0);
 		
 		// If I2C write is success return 1 else 0
 		if(status == 0)
@@ -681,10 +670,8 @@ mos_uint8_t rtc3231_stopAlarm2( void )
 }
 
 
-#endif
+//#endif
 
-#undef I2C_PORT
-#undef I2C_BAUD
 #undef SLAVE_ADDR
 #undef TIME_REG_ADDR
 #undef DATE_REG_ADD
@@ -692,6 +679,3 @@ mos_uint8_t rtc3231_stopAlarm2( void )
 #undef ALARM1_REG_ADDR
 #undef ALARM2_REG_ADDR
 #undef STATUS_REG_ADDR
-
-#endif
-#endif

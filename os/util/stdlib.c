@@ -1,5 +1,7 @@
 #include "stdlib.h"
 
+#define isdigit(c) (c >= '0' && c <= '9')
+
 /* A utility function to reverse a string  */
 static void reverse(char * string, int size)
 {
@@ -85,40 +87,6 @@ void ltoa ( long int int_data, char * ascii_data)
     ascii_data[i] = '\0';
     reverse(ascii_data, i);
 }
-
-/*
-void ftoa ( float float_data, mos_uint8_t decimal_point, char * ascii_data)
-{
-	long int temp1=0, temp2=0;
-	float ten_power=1;
-	mos_uint8_t i = 0;
-	
-	if(float_data < 0)
-	{
-		*ascii_data = '-';
-		ascii_data++;
-		float_data = - float_data;
-	}
-	
-	for(i=0;i<decimal_point;i++)
-	{
-		ten_power = ten_power * 10;
-	}
-	
-	temp1 = (long int)float_data;
-	temp2 = (long int)(( float_data - (float)temp1 ) * ten_power);
-	
-	ltoa(temp1,ascii_data);
-	
-	while(*ascii_data)
-		ascii_data++;
-	
-	*ascii_data = '.';
-	ascii_data++;
-	
-	ltoa(temp2,ascii_data);
-}
-*/
 
 #define MAX_PRECISION	(10)
 static const double rounders[MAX_PRECISION + 1] =
@@ -225,4 +193,79 @@ void ftoa ( float f, mos_uint8_t precision, char * buf)
 
 	//return buf;
 	return;
+}
+
+int atoi(char * ascii_data)
+{
+	mos_uint8_t is_negative=0;
+	int value=0;
+	
+	if ((*ascii_data) == '-')
+	{
+		is_negative = 1;
+		ascii_data++;
+	}
+	
+	while(*ascii_data)
+	{
+		if( ((*ascii_data) >= '0') && ((*ascii_data) <= '9') )
+		{
+			value = 10*value + (*ascii_data) - '0';
+		}
+		else
+			return 0;
+		
+		ascii_data++;
+	}
+	
+	if(is_negative)
+		value = value * (-1);
+	
+	return value;
+}
+
+float atof(const char *s)
+{
+  // This function stolen from either Rolf Neugebauer or Andrew Tolmach. 
+  // Probably Rolf.
+  float a = 0.0;
+  int e = 0;
+  int c;
+  while ((c = *s++) != '\0' && isdigit(c)) 
+  {
+    a = a*10.0 + (c - '0');
+  }
+  
+  if (c == '.') 
+  {
+    while ((c = *s++) != '\0' && isdigit(c)) {
+      a = a*10.0 + (c - '0');
+      e = e-1;
+    }
+  }
+  if (c == 'e' || c == 'E') {
+    int sign = 1;
+    int i = 0;
+    c = *s++;
+    if (c == '+')
+      c = *s++;
+    else if (c == '-') {
+      c = *s++;
+      sign = -1;
+    }
+    while (isdigit(c)) {
+      i = i*10 + (c - '0');
+      c = *s++;
+    }
+    e += i*sign;
+  }
+  while (e > 0) {
+    a *= 10.0;
+    e--;
+  }
+  while (e < 0) {
+    a *= 0.1;
+    e++;
+  }
+  return a;
 }

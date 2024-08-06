@@ -12,6 +12,8 @@ void ringbuf_init(ringbuf_struct_t * ringbuf, mos_uint8_t * data_buffer, mos_uin
 
 mos_uint8_t ringbuf_write(ringbuf_struct_t * ringbuf, mos_uint8_t data)
 {
+	mos_uint8_t atomic_status;
+	
 	if(ringbuf->full)
 	{
 		return 0;
@@ -22,15 +24,18 @@ mos_uint8_t ringbuf_write(ringbuf_struct_t * ringbuf, mos_uint8_t data)
 		ringbuf->write_index++;
 		ringbuf->write_index %= ringbuf->buffer_size;
 		
-		GLOBAL_INTERRUPT_DISABLE();
+		atomic_status = IS_ATOMIC_OFF();		
+		if(atomic_status)
+			ATOMIC_ON();
 		
 		ringbuf->counter++;		
 		if(ringbuf->counter == ringbuf->buffer_size)
 		{
 			ringbuf->full = 1;
 		}
-				
-		GLOBAL_INTERRUPT_ENABLE();		
+		
+		if(atomic_status)
+			ATOMIC_OFF();
 	}
 	return 1;
 }
@@ -38,6 +43,7 @@ mos_uint8_t ringbuf_write(ringbuf_struct_t * ringbuf, mos_uint8_t data)
 mos_uint8_t ringbuf_read(ringbuf_struct_t * ringbuf)
 {
 	mos_uint8_t x=0xFF;
+	mos_uint8_t atomic_status;
 	
 	if( ringbuf->counter == 0 )
 	{
@@ -49,12 +55,15 @@ mos_uint8_t ringbuf_read(ringbuf_struct_t * ringbuf)
 		ringbuf->read_index++;
 		ringbuf->read_index %= ringbuf->buffer_size;
 		
-		GLOBAL_INTERRUPT_DISABLE();
+		atomic_status = IS_ATOMIC_OFF();		
+		if(atomic_status)
+			ATOMIC_ON();
 		
 		ringbuf->counter--;
 		ringbuf->full = 0;
 		
-		GLOBAL_INTERRUPT_ENABLE();		
+		if(atomic_status)
+			ATOMIC_OFF();		
 	}
 	return x;
 }
@@ -71,13 +80,69 @@ mos_uint8_t ringbuf_isfull(ringbuf_struct_t * ringbuf)
 
 void ringbuf_flush(ringbuf_struct_t * ringbuf)
 {
-	GLOBAL_INTERRUPT_DISABLE();
+	mos_uint8_t atomic_status;
+	
+	atomic_status = IS_ATOMIC_OFF();		
+	if(atomic_status)
+		ATOMIC_ON();
 	
 	ringbuf->write_index = 0;
 	ringbuf->read_index = 0;
 	ringbuf->counter = 0;
 	ringbuf->full = 0;
 	
-	GLOBAL_INTERRUPT_ENABLE();
+	if(atomic_status)
+		ATOMIC_OFF();
 }
 
+/*
+
+mos_uint8_t ringbuf_write_noAtomic(ringbuf_struct_t * ringbuf, mos_uint8_t data)
+{
+	if(ringbuf->full)
+	{
+		return 0;
+	}
+	else
+	{
+		ringbuf->buffer[ringbuf->write_index] = data;
+		ringbuf->write_index++;
+		ringbuf->write_index %= ringbuf->buffer_size;
+		
+		ringbuf->counter++;		
+		if(ringbuf->counter == ringbuf->buffer_size)
+		{
+			ringbuf->full = 1;
+		}
+	}
+	return 1;
+}
+
+mos_uint8_t ringbuf_read_noAtomic(ringbuf_struct_t * ringbuf)
+{
+	mos_uint8_t x=0xFF;
+	
+	if( ringbuf->counter == 0 )
+	{
+		return 0xFF;
+	}
+	else
+	{
+		x = ringbuf->buffer[ringbuf->read_index];
+		ringbuf->read_index++;
+		ringbuf->read_index %= ringbuf->buffer_size;
+		
+		ringbuf->counter--;
+		ringbuf->full = 0;		
+	}
+	return x;
+}
+
+void ringbuf_flush_noAtomic(ringbuf_struct_t * ringbuf)
+{	
+	ringbuf->write_index = 0;
+	ringbuf->read_index = 0;
+	ringbuf->counter = 0;
+	ringbuf->full = 0;
+}
+*/

@@ -1,10 +1,8 @@
 #ifndef CLOCK_H
 #define CLOCK_H
 
-/** \addtogroup os
-* @{ \addtogroup header
+/** \addtogroup headers_sys
 * @{ \defgroup clock_h
-* @{ \addtogroup clock_h 
 * @{
 * \brief Documentaion of clock.h header file    
 * \author Sudesh Morey <sudesh.moreyos@gmail.com>
@@ -18,7 +16,7 @@
 *=> Default value : CLOCK_DEBUG_NONE \n
 *=> Usage Description : This macro can be defined to diagnose different execution steps of clock.h or clock.c, with increasing levels
 *(i.e. level 1 2 3) deeper execution steps can be diagnosed. CLOCK_DEBUG_USER level enables CLOCK_DEBUG_MSG_USER Macro.
-*To use this, user should manually write CLOCK_DEBUG_MSG_USER(msg,process_name) inside code sections of clock.h  or clock.c to be diagnosed.
+*To use this, user should manually write CLOCK_DEBUG_MSG_USER(msg,task_name) inside code sections of clock.h  or clock.c to be diagnosed.
 *clock.c source file is platform dependent and can be found in boot folder of selected controller  \n
 * @}
 */
@@ -39,8 +37,8 @@
 ///@}
 
 /** 
-* \brief						Get the current clock time.
-* \param seconds_value   		A pointer to variable of type clock_second_t
+* \brief			Get the current clock time.
+* \param seconds_value   	A pointer to variable of type clock_second_t
 * \param milliseconds_value  	A pointer to variable of type clock_millisecond_t
 * \return void
 *
@@ -52,14 +50,15 @@
 void get_clock_time(clock_second_t * seconds_value, clock_millisecond_t * milliseconds_value );
 
 /** 
-* \brief		Schedule tickless timer for called process.
-* \param p   	A pointer to process
+* \brief	Schedule tickless timer for called task.
+* \param p   	A pointer to task
 * \return void
 *
-* This function checks expiry time of called process **p**. If condition satisfies it schedules
+* This function checks expiry time of called task **p**. If condition satisfies it schedules
 * it in the next tickless timer cycle. Tickless timer is platform dependent. If platform doesn't
 * support tickless timer, this function does nothing.  
 */
 void schedule_tickless_timer_platform(clock_millisecond_t milliseconds_next);
+
 
 #endif /* CLOCK_H */

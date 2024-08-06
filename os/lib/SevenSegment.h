@@ -1,3 +1,13 @@
+/*********************************************************
+ **														**
+ **		Company : DRMZ SYSTEM INNOVATIONS PVT LTD		**
+ **     Project : Morey_os                              **
+ **     Author  : Sudesh Morey                          **
+ **     version : v1.4 									**
+ **   	File    : SevenSegment.h						**
+ **														**
+ ********************************************************/ 
+
 #ifndef SEVENSEGMENT_H
 #define SEVENSEGMENT_H
 
@@ -42,6 +52,8 @@ typedef struct seven_segment_struct
 	mos_uint8_t segment_type;	
 } SevenSegment_t;
 
+mos_uint8_t digit2symbol(mos_uint8_t digit);
+mos_uint8_t reverse_symbol(mos_uint8_t symbol);
 void SevenSegment_begin (struct seven_segment_struct * seven_segment_obj, mos_uint8_t segment_type);
 void SevenSegment_print (struct seven_segment_struct * seven_segment_obj, mos_uint8_t digit);
 void SevenSegment_printDot (struct seven_segment_struct * seven_segment_obj, mos_uint8_t digit);
@@ -50,6 +62,6 @@ void SevenSegment_printDotReverse (struct seven_segment_struct * seven_segment_o
 void SevenSegment_customPrint (struct seven_segment_struct * seven_segment_obj, \
 mos_uint8_t custom_data_pin_a, mos_uint8_t custom_data_pin_b, mos_uint8_t custom_data_pin_c, mos_uint8_t custom_data_pin_d, \
 mos_uint8_t custom_data_pin_e, mos_uint8_t custom_data_pin_f, mos_uint8_t custom_data_pin_g, mos_uint8_t custom_data_pin_h);
-
+void SevenSegment_symbolPrint (struct seven_segment_struct * seven_segment_obj, mos_uint8_t symbol);
 #endif	
 #endif

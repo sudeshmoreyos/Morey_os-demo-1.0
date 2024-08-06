@@ -21,5 +21,9 @@ void lcd_clear(LiquidCrystal_t * lcd_struct);
 void lcd_setCursor(LiquidCrystal_t * lcd_struct, mos_uint8_t x, mos_uint8_t y);
 void lcd_write(LiquidCrystal_t * lcd_struct, char data);
 void lcd_print(LiquidCrystal_t * lcd_struct, char * data_string);
+#ifdef PLATFORM_SUPPORT_CONST_PRINT
+	#include "../../arch/arch_liquid_crystal.h"
+	void lcd_constPrintArch(LiquidCrystal_t * lcd_struct, const char * data_string);
+#endif
 
 #endif

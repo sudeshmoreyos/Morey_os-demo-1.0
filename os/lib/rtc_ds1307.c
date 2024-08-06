@@ -1,26 +1,12 @@
 #include "rtc_ds1307.h"
 
-#ifdef PLATFORM_SUPPORT_I2C
-
-#ifndef RTC1307_I2C_PORT
-	#ifdef I2C
-		#define RTC1307_I2C_PORT I2C
-	#endif
-#endif
-
-#ifdef RTC1307_I2C_PORT
-
-#ifndef RTC1307_I2C_BAUD
-	#define RTC1307_I2C_BAUD 100000
-#endif
-
-#define I2C_PORT RTC1307_I2C_PORT
-#define I2C_BAUD RTC1307_I2C_BAUD
 #define SLAVE_ADDR 0x68
 #define CONTROL_REG_ADDR 0x07
 #define TIME_REG_ADDR 0x00
 #define DATE_REG_ADDR 0x03
 #define TEMP_REG_ADDR 0x11
+
+static const struct i2c_master_driver * ds1307_i2c_port;
 
 // Local Function to convert decimal to BCD
 static mos_uint8_t dec2bcd(mos_uint8_t dec)
@@ -34,12 +20,14 @@ static mos_uint8_t bcd2dec(mos_uint8_t bcd)
 	return (bcd >> 4)*10 + (bcd & 0xF);		
 }
 
-mos_uint8_t rtc1307_begin(mos_uint8_t mode)
+mos_uint8_t rtc1307_begin(const struct i2c_master_driver * i2c_port, mos_uint32_t i2c_baud, mos_uint8_t mode)
 {
 	mos_uint8_t data_tx[2] = {CONTROL_REG_ADDR,0x00};
 	
+	ds1307_i2c_port = i2c_port;
+	
 	// Initialize I2C
-	I2C_PORT.masterBegin(I2C_BAUD);
+	ds1307_i2c_port->begin(i2c_baud);
 	
 	// Set Control register values as per selected input mode
 	if(mode == RTC1307_OUT_ZERO)
@@ -56,7 +44,7 @@ mos_uint8_t rtc1307_begin(mos_uint8_t mode)
 		data_tx[1] = 0x13;
 	
 	// Store Control register
-	return I2C_PORT.masterTransfer(SLAVE_ADDR, 2 , data_tx, 0 , data_tx);
+	return ds1307_i2c_port->transfer(SLAVE_ADDR, data_tx, 2, data_tx, 0);
 }
 
 mos_uint8_t rtc1307_setTime(mos_uint8_t hour, mos_uint8_t minute, mos_uint8_t second)
@@ -82,7 +70,7 @@ mos_uint8_t rtc1307_setTime(mos_uint8_t hour, mos_uint8_t minute, mos_uint8_t se
 	data_tx[3] = dec2bcd(hour);
 	
 	// Store Second, minute, hour, values
-	return I2C_PORT.masterTransfer(SLAVE_ADDR, 4 , data_tx, 0 , data_tx);
+	return ds1307_i2c_port->transfer(SLAVE_ADDR, data_tx, 4 , data_tx, 0);
 }
 
 mos_uint8_t rtc1307_setDate(mos_uint8_t day, mos_uint8_t date, mos_uint8_t month, mos_uint8_t year)
@@ -112,7 +100,7 @@ mos_uint8_t rtc1307_setDate(mos_uint8_t day, mos_uint8_t date, mos_uint8_t month
 	data_tx[4] = dec2bcd(year);
 	
 	// Store day, date, month, year values
-	return I2C_PORT.masterTransfer(SLAVE_ADDR, 5 , data_tx, 0 , data_tx);
+	return ds1307_i2c_port->transfer(SLAVE_ADDR, data_tx, 5 , data_tx, 0);
 }
 
 mos_uint8_t rtc1307_getTime(mos_uint8_t * hour, mos_uint8_t * minute, mos_uint8_t * second)
@@ -120,7 +108,7 @@ mos_uint8_t rtc1307_getTime(mos_uint8_t * hour, mos_uint8_t * minute, mos_uint8_
 	mos_uint8_t data_tx[1] = {TIME_REG_ADDR}, data_rx[3], status;
 	
 	// Read second, minute, hour values
-	status = I2C_PORT.masterTransfer(SLAVE_ADDR, 1 , data_tx, 3, data_rx);
+	status = ds1307_i2c_port->transfer(SLAVE_ADDR, data_tx, 1, data_rx, 3);
 	
 	if(status == 0)
 	{
@@ -138,7 +126,7 @@ mos_uint8_t rtc1307_getDate(mos_uint8_t *day, mos_uint8_t * date, mos_uint8_t * 
 	mos_uint8_t data_tx[1] = {DATE_REG_ADDR}, data_rx[4], status;
 	
 	// Read day, date, month, year values
-	status = I2C_PORT.masterTransfer(SLAVE_ADDR, 1 , data_tx, 4, data_rx);
+	status = ds1307_i2c_port->transfer(SLAVE_ADDR, data_tx, 1, data_rx,4);
 	
 	if(status == 0)
 	{
@@ -151,12 +139,7 @@ mos_uint8_t rtc1307_getDate(mos_uint8_t *day, mos_uint8_t * date, mos_uint8_t * 
 	return status;	
 }
 
-#undef I2C_PORT
-#undef I2C_BAUD
 #undef SLAVE_ADDR
 #undef TIME_REG_ADDR
 #undef DATE_REG_ADD
 #undef TEMP_REG_ADD
-
-#endif
-#endif

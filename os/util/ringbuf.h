@@ -20,4 +20,7 @@ mos_uint16_t ringbuf_count(ringbuf_struct_t * ringbuf);
 mos_uint8_t ringbuf_isfull(ringbuf_struct_t * ringbuf);
 void ringbuf_flush(ringbuf_struct_t * ringbuf);
 
+//mos_uint8_t ringbuf_write_noAtomic(ringbuf_struct_t * ringbuf, mos_uint8_t data);
+//mos_uint8_t ringbuf_read_noAtomic(ringbuf_struct_t * ringbuf);
+//void ringbuf_flush_noAtomic(ringbuf_struct_t * ringbuf);
 #endif
