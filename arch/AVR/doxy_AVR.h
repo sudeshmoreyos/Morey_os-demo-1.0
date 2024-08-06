@@ -1,0 +1,4 @@
+/** \addtogroup arch
+* @{ \defgroup AVR
+* @}
+*/
