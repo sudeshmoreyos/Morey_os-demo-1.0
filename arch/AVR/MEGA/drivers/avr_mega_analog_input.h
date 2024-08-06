@@ -6,8 +6,8 @@
 
 #ifdef PLATFORM_SUPPORT_ANALOGINPUT
 	
-	#define AI_REF_AVCC 0
-	#define AI_REF_AREF 1
+	#define AI_REF_AREF 0
+	#define AI_REF_AVCC 1
 	
 	// internal ref 1.1 & 2.56 are platform dependent hence declared in controller_macros.h file
 	

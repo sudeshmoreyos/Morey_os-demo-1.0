@@ -1,53 +1,53 @@
 //-------------------Macros to change for UARTx------------------//
-// avr_mega_uart
-// UART_AVAILABLE
-// UART_ENABLE
-// UART_TX_DISABLE
-// UART_RX_DISABLE
-// UART_RX_BUFFER_CONF
-// UART_RX_BUFFER_DEFAULT
-// UART_TX_INTERRUPT_ENABLE
-// UART_TX_BUFFER_CONF
-// UART_TX_BUFFER_DEFAULT
-// avr_mega_uart_driver
-// MCU_UART_RX_INTERRUPT_ISR
-// MCU_UART_TX_INTERRUPT_ISR
-// USART_RX_vect
-// USART_UDRE_vect
+// avr_mega_uart1
+// UART1_AVAILABLE
+// UART1_ENABLE
+// UART1_TX_DISABLE
+// UART1_RX_DISABLE
+// UART1_RX_BUFFER_CONF
+// UART1_RX_BUFFER_DEFAULT
+// UART1_TX_INTERRUPT_ENABLE
+// UART1_TX_BUFFER_CONF
+// UART1_TX_BUFFER_DEFAULT
+// avr_mega_uart1_driver
+// MCU_UART1_RX_INTERRUPT_ISR
+// MCU_UART1_TX_INTERRUPT_ISR
+// USART1_RX_vect
+// USART1_UDRE_vect
 
-#include "avr_mega_uart.h"
+#include "avr_mega_uart1.h"
 
-#if defined(PLATFORM_SUPPORT_UART) && defined(UART_AVAILABLE) && (UART_ENABLE == 1)
+#if defined(PLATFORM_SUPPORT_UART) && defined(UART1_AVAILABLE) && (UART1_ENABLE == 1)
 
 #if ( (COMPILER == AVR_STUDIO) || ( COMPILER == WIN_AVR ) || ( COMPILER == AVR_GCC ))
 	#include <avr/interrupt.h>
 #endif
 
 
-#ifndef UART_RX_DISABLE
-	#if defined(UART_RX_BUFFER_CONF)
-		#define RX_BUFFER_SIZE_TEMP UART_RX_BUFFER_CONF
-	#elif defined(UART_RX_BUFFER_DEFAULT)
-		#define RX_BUFFER_SIZE_TEMP UART_RX_BUFFER_DEFAULT
+#ifndef UART1_RX_DISABLE
+	#if defined(UART1_RX_BUFFER_CONF)
+		#define RX_BUFFER_SIZE_TEMP UART1_RX_BUFFER_CONF
+	#elif defined(UART1_RX_BUFFER_DEFAULT)
+		#define RX_BUFFER_SIZE_TEMP UART1_RX_BUFFER_DEFAULT
 	#else
 		#define RX_BUFFER_SIZE_TEMP 64
 	#endif
 #endif
 
-#ifndef UART_RX_DISABLE
-	#ifdef UART_TX_INTERRUPT_ENABLE
-		#if defined(UART_TX_BUFFER_CONF)
-			#define TX_BUFFER_SIZE_TEMP UART_TX_BUFFER_CONF
-		#elif defined(UART_TX_BUFFER_DEFAULT)
-			#define TX_BUFFER_SIZE_TEMP UART_TX_BUFFER_DEFAULT
+#ifndef UART1_TX_DISABLE
+	#ifdef UART1_TX_INTERRUPT_ENABLE
+		#if defined(UART1_TX_BUFFER_CONF)
+			#define TX_BUFFER_SIZE_TEMP UART1_TX_BUFFER_CONF
+		#elif defined(UART1_TX_BUFFER_DEFAULT)
+			#define TX_BUFFER_SIZE_TEMP UART1_TX_BUFFER_DEFAULT
 		#else
 			#define TX_BUFFER_SIZE_TEMP 64
 		#endif
 	#endif
 #endif
 
-#ifdef UART_TX_DISABLE
-	#ifdef UART_RX_DISABLE
+#ifdef UART1_TX_DISABLE
+	#ifdef UART1_RX_DISABLE
 		#error If Serial driver is enabled, both Tx and Rx cannot be disabled
 	#endif
 #endif
@@ -56,27 +56,27 @@
 
 // Do changes here
 // define generic Macros for UART registers
-#define UART_STATUS 			UCSRA
-#define UART_CONTROL1 			UCSRB
-#define UART_CONTROL2 			UCSRC
-#define UART_DATA 			UDR
-#define UART_BAUD_LOW 			UBRRL
-#define UART_BAUD_HIGH 			UBRRH
-#define UART_DRIVER			avr_mega_uart_driver
+#define UART_STATUS 			UCSR1A
+#define UART_CONTROL1 			UCSR1B
+#define UART_CONTROL2 			UCSR1C
+#define UART_DATA 				UDR1
+#define UART_BAUD_LOW 			UBRR1L
+#define UART_BAUD_HIGH 			UBRR1H
+#define UART_DRIVER				avr_mega_uart1_driver
 
 // Unfortunately Interrupt routines are not same for all controllers in AVR
 // Hence These ISR routines must be imported from controller specific macros 
 // if it is different from standard ISRs
-#ifdef MCU_UART_RX_INTERRUPT_ISR
-	#define UART_RX_INTERRUPT_ISR	MCU_UART_RX_INTERRUPT_ISR
+#ifdef MCU_UART1_RX_INTERRUPT_ISR
+	#define UART_RX_INTERRUPT_ISR	MCU_UART1_RX_INTERRUPT_ISR
 #else
-	#define UART_RX_INTERRUPT_ISR	USART_RXC_vect
+	#define UART_RX_INTERRUPT_ISR	USART1_RX_vect
 #endif
 
-#ifdef MCU_UART_RX_INTERRUPT_ISR
-	#define UART_TX_INTERRUPT_ISR	MCU_UART_TX_INTERRUPT_ISR
+#ifdef MCU_UART1_RX_INTERRUPT_ISR
+	#define UART_TX_INTERRUPT_ISR	MCU_UART1_TX_INTERRUPT_ISR
 #else
-	#define UART_TX_INTERRUPT_ISR	USART_UDRE_vect
+	#define UART_TX_INTERRUPT_ISR	USART1_UDRE_vect
 #endif
 
 // define generic Macros for UART Bits
@@ -102,15 +102,15 @@
 
 // define generic Macros for UART config Macros
 
-#ifdef 											UART_TX_INTERRUPT_ENABLE
+#ifdef 											UART1_TX_INTERRUPT_ENABLE
 	#define UART_TX_INTERRUPT_ENABLE_TEMP
 #endif
 
-#ifdef 											UART_TX_DISABLE
+#ifdef 											UART1_TX_DISABLE
 	#define UART_TX_DISABLE_TEMP
 #endif
 
-#ifdef 											UART_RX_DISABLE
+#ifdef 											UART1_RX_DISABLE
 	#define UART_RX_DISABLE_TEMP
 #endif
 
@@ -231,6 +231,10 @@ static void begin(mos_uint32_t baudrate, mos_uint8_t mode)
 		UART_BAUD_LOW = (mos_uint8_t)(Y & 0xFF);
 		UART_STATUS |= (1<<UART_STATUS_DOUBLE_SPEED_BIT);
 	}
+	
+	#ifdef UART_RX_DISABLE_TEMP
+		ringbuf_flush(&buffer_struct_rx);
+	#endif
 }
 
 static void end(void)
@@ -264,7 +268,7 @@ static void end(void)
 		mos_uint8_t status,data;
 		status = UART_STATUS;
 		data = UART_DATA;
-
+		
 		if ((status & ((1<<UART_STATUS_FRAME_ERROR_BIT)|(1<<UART_STATUS_PARITY_ERROR_BIT)|(1<<UART_STATUS_DATA_OVERRUN_BIT))) == 0)
 		{
 			ringbuf_write(&buffer_struct_rx,data);

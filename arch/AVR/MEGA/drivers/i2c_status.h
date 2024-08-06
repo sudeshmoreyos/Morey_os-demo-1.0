@@ -1,47 +1,152 @@
 #ifndef I2C_STATUS_H
 #define I2C_STATUS_H
 
-// these are status codes generated in master mode
+/*@{*/
+/* Master */
+/** \ingroup util_twi
+    \def TW_START
+    start condition transmitted */
+#define TW_START		0x08
 
-// status for master transmitter mode
-#define MASTER_START 							0x08    // master initate I2c start, success status for master
-#define MASTER_START_REPEAT 					0x10    // master initate I2c repeat-start, success status for master
-#define MASTER_ADDRESS_WRITE_ACKNOWLEDGE 		0x18    // master send address + write to slave, slave responds with acknowledge
-#define MASTER_ADDRESS_WRITE_NOACKNOWLEDGE 		0x20  	// master send address + write to slave, slave responds with no-acknowledge
-#define MASTER_DATA_SEND_ACKNOWLEDGE 			0x28    // after address + write master send data to slave, slave responds with acknowledge
-#define MASTER_DATA_SEND_NOACKNOWLEDGE 			0x30    // after address + write master send data to slave, slave responds with no-acknowledge
-#define MASTER_ARBITRATION_LOST_ADDRESS_WRITE 	0x38	// master send address + (write or read) to slave, Arbitration lost by master
+/** \ingroup util_twi
+    \def TW_REP_START
+    repeated start condition transmitted */
+#define TW_REP_START		0x10
 
-// status for master receiver mode                  
-#define MASTER_ADDRESS_READ_ACKNOWLEDGE 		0x40    // master send address + read to slave, slave responds with acknowledge
-#define MASTER_ADDRESS_READ_NOACKNOWLEDGE 		0x48   	// master send address + read to slave, slave responds with no-acknowledge
-#define MASTER_DATA_READ_ACKNOWLEDGE 			0x50    // after address + read, slave send data to master, master responds with acknowledge
-#define MASTER_DATA_READ_NOACKNOWLEDGE 			0x58    // after address + read, slave send data to master, master responds with no-acknowledge
+/* Master Transmitter */
+/** \ingroup util_twi
+    \def TW_MT_SLA_ACK
+    SLA+W transmitted, ACK received */
+#define TW_MT_SLA_ACK		0x18
 
-// these are status codes generated in slave mode
+/** \ingroup util_twi
+    \def TW_MT_SLA_NACK
+    SLA+W transmitted, NACK received */
+#define TW_MT_SLA_NACK		0x20
 
-// status for slave receiver mode
-#define SLAVE_ADDRESS_WRITE_ACKNOWLEDGE 			0x60	// master send address + write to slave, slave responds with acknowledge
-#define SLAVE_ADDRESS_WRITE_NOACKNOWLEDGE 			0x68  	// master send address + write to slave, slave responds with no-acknowledge
-#define SLAVE_GENERAL_CALL_ACKNOWLEDGE 				0x70	// Slave recives a general call, slave responds with acknowledge
-#define SLAVE_DATA_SENDBYMASTER_ACKNOWLEDGE 		0x80    // after address + write master send data to slave, slave responds with acknowledge
-#define SLAVE_DATA_SENDBYMASTER_NOACKNOWLEDGE 		0x88    // after address + write master send data to slave, slave responds with no-acknowledge
-#define SLAVE_DATA_SENDBY_GENERALCALL_ACKNOWLEDGE 	0x90  	// after general call data received by slave, slave responds with acknowledge
-#define SLAVE_DATA_SENDBY_GENERALCALL_NOACKNOWLEDGE 0x98    // after general call data received by slave, slave responds with no-acknowledge
-#define SLAVE_STOP_OK 0xA0                         			// stop condition or repeated start condition received by slave
-//not covered states
-// 0x78 = after arbitration lost as master, general call is received, acknwledge has been sent
+/** \ingroup util_twi
+    \def TW_MT_DATA_ACK
+    data transmitted, ACK received */
+#define TW_MT_DATA_ACK		0x28
 
-// status for slave transmitter mode
-#define SLAVE_ADDRESS_READ_ACKNOWLEDGE 			0xA8		// master send address + read to slave, slave responds with acknowledge
-#define SLAVE_DATA_READBYMASTER_ACKNOWLEDGE 	0xB8       	// after address + read, slave send data to master, master responds with acknowledge
-#define SLAVE_DATA_READBYMASTER_NOACKNOWLEDGE 	0xC0      	// after address + read, slave send data to master, master responds with no-acknowledge
-//not covered states
-// 0xB0 = after arbitration lost as master, own slave address + read is received, acknwledge has been sent
-// 0xC8 = last byte in TWDR is transmitted as slave, TWEA = 0, Acknowledge has been received
+/** \ingroup util_twi
+    \def TW_MT_DATA_NACK
+    data transmitted, NACK received */
+#define TW_MT_DATA_NACK		0x30
 
-// Miscellaneaous states
-#define NO_RELEVANT_STATE 						0xF8		// NO relevant state information, TWINT = 0								
-#define BUS_ERROR 								0x00		// Bus error due to illegal Start or Stop condition
+/** \ingroup util_twi
+    \def TW_MT_ARB_LOST
+    arbitration lost in SLA+W or data */
+#define TW_MT_ARB_LOST		0x38
+
+/* Master Receiver */
+/** \ingroup util_twi
+    \def TW_MR_ARB_LOST
+    arbitration lost in SLA+R or NACK */
+#define TW_MR_ARB_LOST		0x38
+
+/** \ingroup util_twi
+    \def TW_MR_SLA_ACK
+    SLA+R transmitted, ACK received */
+#define TW_MR_SLA_ACK		0x40
+
+/** \ingroup util_twi
+    \def TW_MR_SLA_NACK
+    SLA+R transmitted, NACK received */
+#define TW_MR_SLA_NACK		0x48
+
+/** \ingroup util_twi
+    \def TW_MR_DATA_ACK
+    data received, ACK returned */
+#define TW_MR_DATA_ACK		0x50
+
+/** \ingroup util_twi
+    \def TW_MR_DATA_NACK
+    data received, NACK returned */
+#define TW_MR_DATA_NACK		0x58
+
+/* Slave Transmitter */
+/** \ingroup util_twi
+    \def TW_ST_SLA_ACK
+    SLA+R received, ACK returned */
+#define TW_ST_SLA_ACK		0xA8
+
+/** \ingroup util_twi
+    \def TW_ST_ARB_LOST_SLA_ACK
+    arbitration lost in SLA+RW, SLA+R received, ACK returned */
+#define TW_ST_ARB_LOST_SLA_ACK	0xB0
+
+/** \ingroup util_twi
+    \def TW_ST_DATA_ACK
+    data transmitted, ACK received */
+#define TW_ST_DATA_ACK		0xB8
+
+/** \ingroup util_twi
+    \def TW_ST_DATA_NACK
+    data transmitted, NACK received */
+#define TW_ST_DATA_NACK		0xC0
+
+/** \ingroup util_twi
+    \def TW_ST_LAST_DATA
+    last data byte transmitted, ACK received */
+#define TW_ST_LAST_DATA		0xC8
+
+/* Slave Receiver */
+/** \ingroup util_twi
+    \def TW_SR_SLA_ACK
+    SLA+W received, ACK returned */
+#define TW_SR_SLA_ACK		0x60
+
+/** \ingroup util_twi
+    \def TW_SR_ARB_LOST_SLA_ACK
+    arbitration lost in SLA+RW, SLA+W received, ACK returned */
+#define TW_SR_ARB_LOST_SLA_ACK	0x68
+
+/** \ingroup util_twi
+    \def TW_SR_GCALL_ACK
+    general call received, ACK returned */
+#define TW_SR_GCALL_ACK		0x70
+
+/** \ingroup util_twi
+    \def TW_SR_ARB_LOST_GCALL_ACK
+    arbitration lost in SLA+RW, general call received, ACK returned */
+#define TW_SR_ARB_LOST_GCALL_ACK 0x78
+
+/** \ingroup util_twi
+    \def TW_SR_DATA_ACK
+    data received, ACK returned */
+#define TW_SR_DATA_ACK		0x80
+
+/** \ingroup util_twi
+    \def TW_SR_DATA_NACK
+    data received, NACK returned */
+#define TW_SR_DATA_NACK		0x88
+
+/** \ingroup util_twi
+    \def TW_SR_GCALL_DATA_ACK
+    general call data received, ACK returned */
+#define TW_SR_GCALL_DATA_ACK	0x90
+
+/** \ingroup util_twi
+    \def TW_SR_GCALL_DATA_NACK
+    general call data received, NACK returned */
+#define TW_SR_GCALL_DATA_NACK	0x98
+
+/** \ingroup util_twi
+    \def TW_SR_STOP
+    stop or repeated start condition received while selected */
+#define TW_SR_STOP		0xA0
+
+/* Misc */
+/** \ingroup util_twi
+    \def TW_NO_INFO
+    no state information available */
+#define TW_NO_INFO		0xF8
+
+/** \ingroup util_twi
+    \def TW_BUS_ERROR
+    illegal start or stop condition */
+#define TW_BUS_ERROR		0x00
+
 
 #endif

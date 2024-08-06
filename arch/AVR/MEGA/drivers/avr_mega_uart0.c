@@ -1,3 +1,20 @@
+//-------------------Macros to change for UARTx------------------//
+// avr_mega_uart0
+// UART0_AVAILABLE
+// UART0_ENABLE
+// UART0_TX_DISABLE
+// UART0_RX_DISABLE
+// UART0_RX_BUFFER_CONF
+// UART0_RX_BUFFER_DEFAULT
+// UART0_TX_INTERRUPT_ENABLE
+// UART0_TX_BUFFER_CONF
+// UART0_TX_BUFFER_DEFAULT
+// avr_mega_uart0_driver
+// MCU_UART0_RX_INTERRUPT_ISR
+// MCU_UART0_TX_INTERRUPT_ISR
+// USART0_RX_vect
+// USART0_UDRE_vect
+
 #include "avr_mega_uart0.h"
 
 #if defined(PLATFORM_SUPPORT_UART) && defined(UART0_AVAILABLE) && (UART0_ENABLE == 1)
@@ -6,21 +23,26 @@
 	#include <avr/interrupt.h>
 #endif
 
-#if defined(UART0_RX_BUFFER_CONF)
-	#define UART0_RX_BUFFER_SIZE UART0_RX_BUFFER_CONF
-#elif defined(UART0_RX_BUFFER_DEFAULT)
-	#define UART0_RX_BUFFER_SIZE UART0_RX_BUFFER_DEFAULT
-#else
-	#define UART0_RX_BUFFER_SIZE 64
+
+#ifndef UART0_RX_DISABLE
+	#if defined(UART0_RX_BUFFER_CONF)
+		#define RX_BUFFER_SIZE_TEMP UART0_RX_BUFFER_CONF
+	#elif defined(UART0_RX_BUFFER_DEFAULT)
+		#define RX_BUFFER_SIZE_TEMP UART0_RX_BUFFER_DEFAULT
+	#else
+		#define RX_BUFFER_SIZE_TEMP 64
+	#endif
 #endif
 
-#ifdef UART0_TX_INTERRUPT_ENABLE
-	#if defined(UART0_TX_BUFFER_CONF)
-		#define UART0_TX_BUFFER_SIZE UART0_TX_BUFFER_CONF
-	#elif defined(UART0_TX_BUFFER_DEFAULT)
-		#define UART0_TX_BUFFER_SIZE UART0_TX_BUFFER_DEFAULT
-	#else
-		#define UART0_TX_BUFFER_SIZE 64
+#ifndef UART0_TX_DISABLE
+	#ifdef UART0_TX_INTERRUPT_ENABLE
+		#if defined(UART0_TX_BUFFER_CONF)
+			#define TX_BUFFER_SIZE_TEMP UART0_TX_BUFFER_CONF
+		#elif defined(UART0_TX_BUFFER_DEFAULT)
+			#define TX_BUFFER_SIZE_TEMP UART0_TX_BUFFER_DEFAULT
+		#else
+			#define TX_BUFFER_SIZE_TEMP 64
+		#endif
 	#endif
 #endif
 
@@ -32,13 +54,30 @@
 
 #include "../../../../os/util/ringbuf.h"
 
+// Do changes here
 // define generic Macros for UART registers
-#define UART_STATUS 	UCSR0A
-#define UART_CONTROL1 	UCSR0B
-#define UART_CONTROL2 	UCSR0C
-#define UART_DATA 		UDR0
-#define UART_BAUD_LOW 	UBRR0L
-#define UART_BAUD_HIGH 	UBRR0H
+#define UART_STATUS 			UCSR0A
+#define UART_CONTROL1 			UCSR0B
+#define UART_CONTROL2 			UCSR0C
+#define UART_DATA 			UDR0
+#define UART_BAUD_LOW 			UBRR0L
+#define UART_BAUD_HIGH 			UBRR0H
+#define UART_DRIVER			avr_mega_uart0_driver
+
+// Unfortunately Interrupt routines are not same for all controllers in AVR
+// Hence These ISR routines must be imported from controller specific macros 
+// if it is different from standard ISRs
+#ifdef MCU_UART0_RX_INTERRUPT_ISR
+	#define UART_RX_INTERRUPT_ISR	MCU_UART0_RX_INTERRUPT_ISR
+#else
+	#define UART_RX_INTERRUPT_ISR	USART0_RX_vect
+#endif
+
+#ifdef MCU_UART0_RX_INTERRUPT_ISR
+	#define UART_TX_INTERRUPT_ISR	MCU_UART0_TX_INTERRUPT_ISR
+#else
+	#define UART_TX_INTERRUPT_ISR	USART0_UDRE_vect
+#endif
 
 // define generic Macros for UART Bits
 #define UART_STATUS_DOUBLE_SPEED_BIT 	1
@@ -50,7 +89,7 @@
 
 #define UART_CONTROL1_TX_ENABLE_BIT		3
 #define UART_CONTROL1_RX_ENABLE_BIT		4
-//#define UART_CONTROL1_UDRIE_ENABLE_BIT	5
+#define UART_CONTROL1_UDRIE_ENABLE_BIT	5
 #define UART_CONTROL1_TXCIE_ENABLE_BIT	6
 #define UART_CONTROL1_RXCIE_ENABLE_BIT	7
 
@@ -62,53 +101,48 @@
 #define UART_CONTROL2_REG_SEL_BIT		7
 
 // define generic Macros for UART config Macros
-#define RX_BUFFER_SIZE_TEMP 					UART0_RX_BUFFER_SIZE
-#define TX_BUFFER_SIZE_TEMP 					UART0_TX_BUFFER_SIZE
 
 #ifdef 											UART0_TX_INTERRUPT_ENABLE
-	#define SERIAL_TX_INTERRUPT_ENABLE_TEMP
+	#define UART_TX_INTERRUPT_ENABLE_TEMP
 #endif
 
 #ifdef 											UART0_TX_DISABLE
-	#define SERIAL_TX_DISABLE_TEMP
+	#define UART_TX_DISABLE_TEMP
 #endif
 
 #ifdef 											UART0_RX_DISABLE
-	#define SERIAL_RX_DISABLE_TEMP
+	#define UART_RX_DISABLE_TEMP
 #endif
 
-mos_uint8_t check=0;
-
-#ifndef SERIAL_RX_DISABLE_TEMP
-	mos_uint8_t bufferRx[RX_BUFFER_SIZE_TEMP];
-	ringbuf_struct_t buffer_struct_rx;
+#ifndef UART_RX_DISABLE_TEMP
+	static mos_uint8_t bufferRx[RX_BUFFER_SIZE_TEMP];
+	static ringbuf_struct_t buffer_struct_rx;
 #endif
 
-#ifndef SERIAL_TX_DISABLE_TEMP
-	#ifdef SERIAL_TX_INTERRUPT_ENABLE_TEMP
-		mos_uint8_t bufferTx[TX_BUFFER_SIZE_TEMP];
-		ringbuf_struct_t buffer_struct_tx;
-		mos_uint8_t tx_complete_flag = 0;
+#ifndef UART_TX_DISABLE_TEMP
+	#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
+		static mos_uint8_t bufferTx[TX_BUFFER_SIZE_TEMP];
+		static ringbuf_struct_t buffer_struct_tx;
 	#endif
 #endif
 
 static void begin(mos_uint32_t baudrate, mos_uint8_t mode)
 {
-    float x,X,E1,E2;
+    float x,X,error1,error2;
 	mos_uint32_t y,Y;
     mos_uint8_t ucsrc = 0;
 	
     ucsrc = (1 << UART_CONTROL2_REG_SEL_BIT);
 	
-	#ifndef SERIAL_TX_DISABLE_TEMP
+	#ifndef UART_TX_DISABLE_TEMP
 		UART_CONTROL1 = (1 << UART_CONTROL1_TX_ENABLE_BIT);
-		#ifdef SERIAL_TX_INTERRUPT_ENABLE_TEMP
-			UART_CONTROL1 |= (1<<UART_CONTROL1_TXCIE_ENABLE_BIT);
+		#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
+			//UART_CONTROL1 |= (1<<UART_CONTROL1_TXCIE_ENABLE_BIT);		
 			ringbuf_init(&buffer_struct_tx, bufferTx, TX_BUFFER_SIZE_TEMP);
 		#endif
 	#endif
 	
-	#ifndef SERIAL_RX_DISABLE_TEMP
+	#ifndef UART_RX_DISABLE_TEMP
 		UART_CONTROL1 |= (1 << UART_CONTROL1_RX_ENABLE_BIT) | (1 << UART_CONTROL1_RXCIE_ENABLE_BIT);
 		ringbuf_init(&buffer_struct_rx, bufferRx, RX_BUFFER_SIZE_TEMP);
 	#endif
@@ -169,23 +203,24 @@ static void begin(mos_uint32_t baudrate, mos_uint8_t mode)
 	// Calculate baudrate error in normal speed mode
 	x = (((float)CONTROLLER_FREQ/ (16 * (float)baudrate)) - 1);
 	y = (mos_uint32_t) x;
-	E1 = (((x - (float)y) / x ) * 100);
-	if (E1 < 0)
+	error1 = (((x - (float)y) / x ) * 100);
+	if (error1 < 0)
 	{
-		 E1 = (E1 * (-1));
+		 error1 = (error1 * (-1));
 	}
 	
 	// Calculate baudrate error in double speed mode
 	X = (((float)CONTROLLER_FREQ / (8 * (float)baudrate)) - 1);
 	Y = (mos_uint32_t) X;
-	E2 = (((X - (float)Y) / X ) * 100);
-	if (E2 < 0)
+	error2 = (((X - (float)Y) / X ) * 100);
+	if (error2 < 0)
 	{
-		 E2 = (E2 * (-1));
+		 error2 = (error2 * (-1));
 	}
 	
-	// Choose mode with lesser baudrate error
-	if(E1 <= E2)
+	// Choose Single speed mode if error is less than 0.5%
+	// Otherwise choose mode with lesser baudrate error
+	if(error1 < 0.5 || error1 <= error2)
 	{
 		UART_BAUD_HIGH = (mos_uint8_t)(y >> 8);
 		UART_BAUD_LOW = (mos_uint8_t)(y & 0xFF);
@@ -196,10 +231,19 @@ static void begin(mos_uint32_t baudrate, mos_uint8_t mode)
 		UART_BAUD_LOW = (mos_uint8_t)(Y & 0xFF);
 		UART_STATUS |= (1<<UART_STATUS_DOUBLE_SPEED_BIT);
 	}
+	
+	#ifdef UART_RX_DISABLE_TEMP
+		ringbuf_flush(&buffer_struct_rx);
+	#endif
 }
 
+static void end(void)
+{
+	UART_CONTROL1 = 0;
+	UART_CONTROL2 = 0;
+}
 // UART Rx Functions
-#ifdef SERIAL_RX_DISABLE_TEMP
+#ifdef UART_RX_DISABLE_TEMP
 
 	static int available(void)
 	{
@@ -218,15 +262,13 @@ static void begin(mos_uint32_t baudrate, mos_uint8_t mode)
 
 #else
 	#if ( (COMPILER == AVR_STUDIO) || ( COMPILER == WIN_AVR ) || ( COMPILER == AVR_GCC ))
-		ISR(USART_RX_vect)
-	#elif COMPILER == CODEVISION_AVR
-		interrupt [USART_RX] void usart_rx_isr(void)
+		ISR(UART_RX_INTERRUPT_ISR)
 	#endif
 	{
 		mos_uint8_t status,data;
 		status = UART_STATUS;
 		data = UART_DATA;
-
+		
 		if ((status & ((1<<UART_STATUS_FRAME_ERROR_BIT)|(1<<UART_STATUS_PARITY_ERROR_BIT)|(1<<UART_STATUS_DATA_OVERRUN_BIT))) == 0)
 		{
 			ringbuf_write(&buffer_struct_rx,data);
@@ -251,7 +293,7 @@ static void begin(mos_uint32_t baudrate, mos_uint8_t mode)
 #endif
 
 // UART Tx Functions
-#ifdef SERIAL_TX_DISABLE_TEMP
+#ifdef UART_TX_DISABLE_TEMP
 
 	static void write(mos_uint8_t data)
 	{
@@ -269,7 +311,23 @@ static void begin(mos_uint32_t baudrate, mos_uint8_t mode)
 	{
 		(void) data;
 		return;
-	 }
+	}
+	
+	#ifdef PLATFORM_SUPPORT_CONST_PRINT
+	
+		static void constPrintArch(const char *data)
+		{
+			(void) data;
+			return;
+		}
+
+		static void constPrintlnArch(const char *data)
+		{
+			(void) data;
+			return;
+		}
+	
+	#endif
 
 	static void printBytes(mos_uint8_t * data, mos_uint16_t len)
 	{
@@ -285,54 +343,41 @@ static void begin(mos_uint32_t baudrate, mos_uint8_t mode)
 
 #else
 	
-	#ifdef SERIAL_TX_INTERRUPT_ENABLE_TEMP
+	#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
 		#if ( (COMPILER == AVR_STUDIO) || ( COMPILER == WIN_AVR ) || ( COMPILER == AVR_GCC ))
-			//ISR(USART_UDRE_vect)
-			ISR(USART_TXC_vect)
-		#elif COMPILER == CODEVISION_AVR
-			interrupt [USART_TXC] void usart_txc_isr(void)
+			ISR(UART_TX_INTERRUPT_ISR)
 		#endif
 		{
-			if(ringbuf_count(&buffer_struct_tx))
-				UART_DATA = ringbuf_read(&buffer_struct_tx);
-			else
-				tx_complete_flag = 1;
-			
-			/*
-			else
-			{
-				GLOBAL_INTERRUPT_DISABLE();
-				UART_CONTROL1 &= ~(1<<UART_CONTROL1_UDRIE_ENABLE_BIT);
-				GLOBAL_INTERRUPT_ENABLE();
-				check=0;
-			}
-			*/
-		
+			//UART_CONTROL1 &= ~(1<<UART_CONTROL1_UDRIE_ENABLE_BIT);
+			UART_DATA = ringbuf_read_noAtomic(&buffer_struct_tx);
+			UART_STATUS |= (1<<UART_STATUS_TX_COMPLETE_BIT);
+			if(ringbuf_count(&buffer_struct_tx)==0)
+				UART_CONTROL1 &= ~(1<<UART_CONTROL1_UDRIE_ENABLE_BIT);				
+				//UART_CONTROL1 |= (1<<UART_CONTROL1_UDRIE_ENABLE_BIT);				
 		}
 	#endif
 
 	static void write(mos_uint8_t data)
 	{
-		#ifdef SERIAL_TX_INTERRUPT_ENABLE_TEMP
-			tx_complete_flag = 0;
-			if( ( ringbuf_count(&buffer_struct_tx) == 0 ) && ( ( UART_STATUS & (1 << UART_STATUS_UDR_EMPTY_BIT) ) != 0) )
-				UART_DATA = data;
-			else
-				ringbuf_write(&buffer_struct_tx,data);
-			/*
-			{
-				
-				//if((UART_CONTROL1 & (1<<UART_CONTROL1_UDRIE_ENABLE_BIT))==0)
-				if(check==0)
-				{
-					GLOBAL_INTERRUPT_DISABLE();
-					UART_CONTROL1 |= (1<<UART_CONTROL1_UDRIE_ENABLE_BIT);
-					GLOBAL_INTERRUPT_ENABLE();
-					check = 1;
-				}
-			}
-			*/
 		
+		#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
+			mos_uint8_t atomic_status = 0;
+			
+			atomic_status = IS_ATOMIC_ON();
+			if(!atomic_status)
+				ATOMIC_ON();
+			
+			if( ( ringbuf_count(&buffer_struct_tx) == 0 ) && ( ( UART_STATUS & (1 << UART_STATUS_UDR_EMPTY_BIT) ) != 0) )
+					UART_DATA = data;
+			else if( !ringbuf_isfull(&buffer_struct_tx) )
+			{
+				ringbuf_write(&buffer_struct_tx,data);
+				if((UART_CONTROL1 & (1<<UART_CONTROL1_UDRIE_ENABLE_BIT))==0)
+					UART_CONTROL1 |= (1<<UART_CONTROL1_UDRIE_ENABLE_BIT);
+			}
+			
+			if(!atomic_status)
+				ATOMIC_OFF();
 		#else
 			while (!(UART_STATUS & (1 << UART_STATUS_UDR_EMPTY_BIT)));
 			UART_DATA = data;
@@ -341,81 +386,147 @@ static void begin(mos_uint32_t baudrate, mos_uint8_t mode)
 
 	static void print(char *data)
 	{
+		#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
+			mos_uint8_t atomic_status = 0;
+			
+			atomic_status = IS_ATOMIC_ON();
+			if(!atomic_status)
+				ATOMIC_ON();
+		#endif
+			
 		while (*data)
 		{
 			write((mos_uint8_t)(*data));
 			data++;
 		}
+		
+		#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
+			if(!atomic_status)
+				ATOMIC_OFF();
+		#endif
+		
 	}
 
 	static void println(char *data)
 	{
+		#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
+			ATOMIC_ON();
+		#endif
+		
 		print(data);
 		write('\r');
 		write('\n');
+		
+		#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
+			ATOMIC_OFF();
+		#endif
 	}
+	
+	#ifdef PLATFORM_SUPPORT_CONST_PRINT
+	
+		static void constPrintArch(const char *data)
+		{
+			#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
+				mos_uint8_t atomic_status = 0;
+				
+				atomic_status = IS_ATOMIC_ON();
+				if(!atomic_status)
+					ATOMIC_ON();
+			#endif
+			
+			while (pgm_read_byte(data))
+			{
+				write(pgm_read_byte(data));
+				data++;
+			}
+			
+			#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
+				if(!atomic_status)
+					ATOMIC_OFF();
+			#endif
+		}
+
+		static void constPrintlnArch(const char *data)
+		{
+			#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
+				ATOMIC_ON();
+			#endif
+			
+			constPrintArch(data);
+			write('\r');
+			write('\n');
+			
+			#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
+				ATOMIC_OFF();
+			#endif
+		}
+	
+	#endif
 
 	static void printBytes(mos_uint8_t * data, mos_uint16_t len)
 	{
+		#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
+			ATOMIC_ON();
+		#endif
 		while (len)
 		{
-			write((mos_uint8_t)(*data));
+			write(*data);
 			data++;
 			len--;
 		}
+		#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
+			ATOMIC_OFF();
+		#endif
 	}
 	
 	static mos_uint8_t txComplete(void)
 	{
-		#ifdef SERIAL_TX_INTERRUPT_ENABLE_TEMP
-			return tx_complete_flag;
+		#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
+			if(ringbuf_count(&buffer_struct_tx) == 0)
+			{
+				if(UART_STATUS & (1 << UART_STATUS_TX_COMPLETE_BIT))
+					return 1;
+				else
+					return 0;
+			}
+			else
+				return 0;
 		#else
-			if ( (UART_STATUS & (1<<UART_STATUS_TX_COMPLETE_BIT)) == 0) // check if transmit shift register of mega8 is empty
-				return 0;
-			else
+			if(UART_STATUS & (1 << UART_STATUS_TX_COMPLETE_BIT))
 				return 1;
+			else
+				return 0;
 		#endif
-		
-		/*
-		#ifdef SERIAL_TX_INTERRUPT_ENABLE_TEMP
-			if(ringbuf_count(&buffer_struct_tx) > 0) // check if Tx ring buffer is empty
-				return 0;
-			else if ( (UART_STATUS & (1<<UART_STATUS_TX_COMPLETE_BIT)) == 0) // check if transmit shif register of mega8 is empty
-				return 0;
-			else
-				return 1;
-		#else
-			if ( (UART_STATUS & (1<<UART_STATUS_TX_COMPLETE_BIT)) == 0) // check if transmit shif register of mega8 is empty
-				return 0;
-			else
-				return 1;
-		#endif
-		*/
-	
 	}
-
-
 #endif
 
-const struct serial_driver avr_mega_uart0_driver = {
+const struct serial_driver UART_DRIVER = {
 	begin,
+	end,
 	available,
 	read,
 	flush,
 	write,
 	print,
 	println,
+	#ifdef PLATFORM_SUPPORT_CONST_PRINT
+		constPrintArch,
+		constPrintlnArch,
+	#endif
 	printBytes,
 	txComplete,
 };
 
 // Un-define generic Macros for UART registers
+#undef UART_RX_INTERRUPT_ISR
+#undef UART_TX_INTERRUPT_ISR
 #undef UART_STATUS
 #undef UART_CONTROL1
 #undef UART_CONTROL2
 #undef UART_DATA
 #undef UART_BAUD_LOW
 #undef UART_BAUD_HIGH
+#undef UART_DRIVER
 
 // Un-define generic Macros for UART Bits
 #undef UART_STATUS_DOUBLE_SPEED_BIT
@@ -441,16 +552,16 @@ const struct serial_driver avr_mega_uart0_driver = {
 #undef RX_BUFFER_SIZE_TEMP
 #undef TX_BUFFER_SIZE_TEMP
 
-#ifdef SERIAL_TX_INTERRUPT_ENABLE_TEMP
-	#undef SERIAL_TX_INTERRUPT_ENABLE_TEMP
+#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
+	#undef UART_TX_INTERRUPT_ENABLE_TEMP
 #endif
 
-#ifdef SERIAL_TX_DISABLE_TEMP
-	#undef SERIAL_TX_DISABLE_TEMP
+#ifdef UART_TX_DISABLE_TEMP
+	#undef UART_TX_DISABLE_TEMP
 #endif
 
-#ifdef SERIAL_RX_DISABLE_TEMP
-	#undef SERIAL_RX_DISABLE_TEMP
+#ifdef UART_RX_DISABLE_TEMP
+	#undef UART_RX_DISABLE_TEMP
 #endif
 
-#endif
+#endif 

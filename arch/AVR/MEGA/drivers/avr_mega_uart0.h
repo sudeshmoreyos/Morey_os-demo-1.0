@@ -1,14 +1,27 @@
+//-------------------Macros to change for UARTx------------------//
+// AVR_MEGA_UART0_H
+// UART0_AVAILABLE
+// UART0_PORT
+// UART0_ENABLE
+// UART0_TX_DISABLE
+// UART0_RX_DISABLE
+// UART0_RX_BUFFER_CONF
+// UART0_TX_BUFFER_CONF
+// UART0_TX_INTERRUPT_ENABLE
+// avr_mega_uart0_driver
+
 #ifndef AVR_MEGA_UART0_H
 #define AVR_MEGA_UART0_H
+
 #include "../../../../platform.h"
 
 #if defined(PLATFORM_SUPPORT_UART) && defined(UART0_AVAILABLE)
-// Defining Controller specific UART Macros from OS Serial Macros
+	
+	// Defining Controller specific UART Macros from OS Serial Macros
 	#if SERIAL0_PORT == UART0_PORT
 	
 		#ifdef SERIAL0_ENABLE
 			#define UART0_ENABLE 1
-			#define here2
 		#else
 			#define UART0_ENABLE 0
 		#endif
@@ -144,4 +157,5 @@
 		extern const struct serial_driver avr_mega_uart0_driver;		
 	#endif
 #endif
+
 #endif
