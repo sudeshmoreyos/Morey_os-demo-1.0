@@ -47,7 +47,7 @@ Morey_os is still under development. To know supported features and supported co
 
 Supported Controllers : 
 
-1. Atmega328P
+1. Atmega328P, Atmega8
 
 Supported Boards :
 
@@ -58,3 +58,4 @@ Supported Boards :
 Dont miss wiki tutorials to explore more about Morey_os : https://github.com/sudeshmoreyos/Morey_os-demo-1.0/wiki
 
 Contact Email : sudesh.moreyos@gmail.com
+
