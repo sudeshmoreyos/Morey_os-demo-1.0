@@ -1,0 +1,10 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+#define COMPILER AVR_STUDIO
+#define SERIAL_ENABLE
+#define UART0_TX_INTERRUPT_ENABLE
+#define SERIAL_LINE_ENABLE
+
+#endif
+

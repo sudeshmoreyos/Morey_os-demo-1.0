@@ -1,0 +1,8 @@
+PROJECT = sd_fat32_test
+MOREY_OS_PATH = ../..
+
+#BOARD = ARDUINO_UNO
+ARCH = AVR_MEGA
+CONTROLLER = MEGA328P
+
+include $(MOREY_OS_PATH)/Makefile.include

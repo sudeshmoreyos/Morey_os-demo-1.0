@@ -1,0 +1,11 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+#define SERIAL6_ENABLE 1
+#define RTC3231_I2C_PORT I2C1
+#define RTC3231_I2C_BAUD 50000
+
+#define COMPILER AVR_STUDIO
+
+#endif
+

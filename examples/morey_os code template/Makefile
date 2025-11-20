@@ -1,4 +1,4 @@
-PROJECT = template
+PROJECT = led_blink
 MOREY_OS_PATH = ../..
 
 ARCH = AVR_MEGA

@@ -50,7 +50,7 @@ void ptimer_init(void);
 *
 *	Morey_Os implements tickless timer, hence ptimer Task or scheduler do not need to be called after
 *	every clock change. Morey OS Clock event occurs in two conditions. First when maximum allowed tickless timer span
-*	has elapsed. Second when some Task is scheduled to be called before expiry of maximum allowed tickelss timer span.
+*	has elapsed. Second when some Task is scheduled to be called before expiry of maximum allowed ticklss timer span.
 * 	When this function is called, ptimer checks if any Task need service. If yes then it wakes up that Task
 *	else it returns back to OS idle Task. Typically this function is called in system clock header funtions.
 */

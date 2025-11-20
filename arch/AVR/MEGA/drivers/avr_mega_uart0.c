@@ -56,12 +56,12 @@
 
 // Do changes here
 // define generic Macros for UART registers
-#define UART_STATUS 			UCSR0A
-#define UART_CONTROL1 			UCSR0B
-#define UART_CONTROL2 			UCSR0C
+#define UART_STATUS 		UCSR0A
+#define UART_CONTROL1 		UCSR0B
+#define UART_CONTROL2 		UCSR0C
 #define UART_DATA 			UDR0
-#define UART_BAUD_LOW 			UBRR0L
-#define UART_BAUD_HIGH 			UBRR0H
+#define UART_BAUD_LOW 		UBRR0L
+#define UART_BAUD_HIGH 		UBRR0H
 #define UART_DRIVER			avr_mega_uart0_driver
 
 // Unfortunately Interrupt routines are not same for all controllers in AVR
@@ -98,19 +98,18 @@
 #define UART_CONTROL2_STOP_SIZE_BIT		3
 #define UART_CONTROL2_PARITY_MODE_BIT0	4
 #define UART_CONTROL2_PARITY_MODE_BIT1	5
-#define UART_CONTROL2_REG_SEL_BIT		7
 
 // define generic Macros for UART config Macros
 
-#ifdef 											UART0_TX_INTERRUPT_ENABLE
+#ifdef	UART0_TX_INTERRUPT_ENABLE
 	#define UART_TX_INTERRUPT_ENABLE_TEMP
 #endif
 
-#ifdef 											UART0_TX_DISABLE
+#ifdef 	UART0_TX_DISABLE
 	#define UART_TX_DISABLE_TEMP
 #endif
 
-#ifdef 											UART0_RX_DISABLE
+#ifdef 	UART0_RX_DISABLE
 	#define UART_RX_DISABLE_TEMP
 #endif
 
@@ -126,48 +125,81 @@
 	#endif
 #endif
 
+#ifdef SERIAL_LINE_ENABLE
+	static volatile mos_uint8_t terminator_string[10];
+	static volatile mos_uint8_t terminator_len=0;
+	
+	// count of fully terminated strings
+	static volatile mos_uint16_t string_len = 0;
+	
+	// ISR terminator matching index
+	static volatile mos_uint8_t isr_match_index = 0;
+	
+	// read-side terminator matcher
+	static mos_uint8_t read_match_index = 0;
+
+	// Flag: set by read() when it finishes exactly one string
+	static volatile mos_uint8_t string_completed_in_read = 0;
+	
+	static void terminator(void * term, mos_uint8_t len);
+	
+#endif
+
+static void flush(void);
+
 static void begin(mos_uint32_t baudrate, mos_uint8_t mode)
 {
     float x,X,error1,error2;
 	mos_uint32_t y,Y;
-    mos_uint8_t ucsrc = 0;
 	
-    ucsrc = (1 << UART_CONTROL2_REG_SEL_BIT);
+	// Temperorary variables to hold control2 and control3 register values for final atomic update.
+    mos_uint8_t uart_control1_temp = 0, uart_control2_temp = 0;
 	
+	// Do settings to enable Tx
 	#ifndef UART_TX_DISABLE_TEMP
-		UART_CONTROL1 = (1 << UART_CONTROL1_TX_ENABLE_BIT);
-		#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
-			//UART_CONTROL1 |= (1<<UART_CONTROL1_TXCIE_ENABLE_BIT);		
+		// enable Tx in control1 temp variable
+		uart_control1_temp |= (1 << UART_CONTROL1_TX_ENABLE_BIT);
+		// If uart Tx is enabled initiate Tx buffer, Tx interrupt is enabled in write function
+		#ifdef UART_TX_INTERRUPT_ENABLE_TEMP	
 			ringbuf_init(&buffer_struct_tx, bufferTx, TX_BUFFER_SIZE_TEMP);
 		#endif
 	#endif
 	
+	// Do settings to enable Rx, Rx by default work in interrupt mode
 	#ifndef UART_RX_DISABLE_TEMP
-		UART_CONTROL1 |= (1 << UART_CONTROL1_RX_ENABLE_BIT) | (1 << UART_CONTROL1_RXCIE_ENABLE_BIT);
+		// Enable Rx and RXC interrupt bit
+		uart_control1_temp |= (1 << UART_CONTROL1_RX_ENABLE_BIT) | (1 << UART_CONTROL1_RXCIE_ENABLE_BIT);
+		// Initiate Rx buffer
 		ringbuf_init(&buffer_struct_rx, bufferRx, RX_BUFFER_SIZE_TEMP);
 	#endif
 	
+	// This was error assignment copied from uart.c, this bit dont exists in uartx
+    // uart_control2_temp = (1 << UART_CONTROL2_REG_SEL_BIT);
 	
 	// do settings for selected databits mode
     switch (mode >> 4)
     {
+		case 5:
+			uart_control2_temp |= (0 << UART_CONTROL2_CHAR_SIZE_BIT0) | (0 << UART_CONTROL2_CHAR_SIZE_BIT1);
+			break;
+			
 		case 6:
-			ucsrc |= (1 << UART_CONTROL2_CHAR_SIZE_BIT0);
+			uart_control2_temp |= (1 << UART_CONTROL2_CHAR_SIZE_BIT0);
 			break;
 			
 		case 7:
-			ucsrc |= (1 << UART_CONTROL2_CHAR_SIZE_BIT1);
+			uart_control2_temp |= (1 << UART_CONTROL2_CHAR_SIZE_BIT1);
 			break;
 		
 		case 8:
-			ucsrc |= (1 << UART_CONTROL2_CHAR_SIZE_BIT0) | (1 << UART_CONTROL2_CHAR_SIZE_BIT1);
+			uart_control2_temp |= (1 << UART_CONTROL2_CHAR_SIZE_BIT0) | (1 << UART_CONTROL2_CHAR_SIZE_BIT1);
 			break;
 			
 		// Currently 9 data bit mode is not supported
 		/*	
 		case 9:
 		{
-			ucsrc |= (1 << UCSZ0) | (1 << UCSZ1);
+			uart_control2_temp |= (1 << UCSZ0) | (1 << UCSZ1);
 			UART_CONTROL1 |= (1 << UCSZ2);
 			break;
 		}
@@ -178,27 +210,25 @@ static void begin(mos_uint32_t baudrate, mos_uint8_t mode)
     switch ((mode>>2) & 0x3)
     {
 		case ODD:
-			ucsrc |= (1 << UART_CONTROL2_PARITY_MODE_BIT1) | (1 << UART_CONTROL2_PARITY_MODE_BIT0);
+			uart_control2_temp |= (1 << UART_CONTROL2_PARITY_MODE_BIT1) | (1 << UART_CONTROL2_PARITY_MODE_BIT0);
 			break;
 		case EVEN:
-			ucsrc |= (1 << UART_CONTROL2_PARITY_MODE_BIT1) | (0 << UART_CONTROL2_PARITY_MODE_BIT0);
+			uart_control2_temp |= (1 << UART_CONTROL2_PARITY_MODE_BIT1) | (0 << UART_CONTROL2_PARITY_MODE_BIT0);
 			break;
 		case NONE:
-			ucsrc |= (0 << UART_CONTROL2_PARITY_MODE_BIT1) | (0 << UART_CONTROL2_PARITY_MODE_BIT0);
+			uart_control2_temp |= (0 << UART_CONTROL2_PARITY_MODE_BIT1) | (0 << UART_CONTROL2_PARITY_MODE_BIT0);
 			break;
     }
 	
 	// do settings for selected stop bit mode
     if ((mode & 0x3) == 2)
     {
-        ucsrc |= (1 << UART_CONTROL2_STOP_SIZE_BIT);
+        uart_control2_temp |= (1 << UART_CONTROL2_STOP_SIZE_BIT);
     }
     else
     {
-        ucsrc |= (0 << UART_CONTROL2_STOP_SIZE_BIT);
+        uart_control2_temp |= (0 << UART_CONTROL2_STOP_SIZE_BIT);
     }
-    
-	UART_CONTROL2 = ucsrc;
 	
 	// Calculate baudrate error in normal speed mode
 	x = (((float)CONTROLLER_FREQ/ (16 * (float)baudrate)) - 1);
@@ -232,15 +262,26 @@ static void begin(mos_uint32_t baudrate, mos_uint8_t mode)
 		UART_STATUS |= (1<<UART_STATUS_DOUBLE_SPEED_BIT);
 	}
 	
-	#ifdef UART_RX_DISABLE_TEMP
-		ringbuf_flush(&buffer_struct_rx);
+	#ifdef SERIAL_LINE_ENABLE
+		// set \r\n as ter bytes, also flush Rx buffer and reset Rx global variables
+		terminator("\r\n",2);
 	#endif
+	
+	UART_CONTROL2 = uart_control2_temp;
+	UART_CONTROL1 = uart_control1_temp;
 }
 
 static void end(void)
 {
 	UART_CONTROL1 = 0;
 	UART_CONTROL2 = 0;
+	UART_STATUS = 0;
+	flush();
+	#ifndef UART_TX_DISABLE_TEMP
+		#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
+			ringbuf_flush(&buffer_struct_tx);
+		#endif
+	#endif
 }
 // UART Rx Functions
 #ifdef UART_RX_DISABLE_TEMP
@@ -259,6 +300,26 @@ static void end(void)
 	{
 		return;
 	}
+	
+	#ifdef SERIAL_LINE_ENABLE
+		static void terminator(void * term, mos_uint8_t len)
+		{
+			(void) term;
+			(void) len;
+			return;
+		}
+		
+		static unsigned int stringAvailable(void)
+		{
+			return 0;
+		}
+		
+		static unsigned int readString(char * data, int max_len)
+		{
+			(void) data;
+			return 0;
+		}
+	#endif
 
 #else
 	#if ( (COMPILER == AVR_STUDIO) || ( COMPILER == WIN_AVR ) || ( COMPILER == AVR_GCC ))
@@ -266,30 +327,272 @@ static void end(void)
 	#endif
 	{
 		mos_uint8_t status,data;
+		
 		status = UART_STATUS;
 		data = UART_DATA;
 		
+		// Check if there is no framer error or parity error or Rx hardware buffer overflow error
 		if ((status & ((1<<UART_STATUS_FRAME_ERROR_BIT)|(1<<UART_STATUS_PARITY_ERROR_BIT)|(1<<UART_STATUS_DATA_OVERRUN_BIT))) == 0)
 		{
+			// write byte in rx buffer
 			ringbuf_write(&buffer_struct_rx,data);
+			
+			#ifdef SERIAL_LINE_ENABLE
+				// Check if terminator_len is non-zero, else no point in checking for terminator characters
+				if(terminator_len)
+				{
+					// check if data = terminator[isr_match_index]
+					// isr_match_index holds the current terminator array index if previous terminator char was matched.
+					if(terminator_string[isr_match_index] == data)
+					{
+						// increment isr_match_index to match next terminator char
+						isr_match_index++;
+						
+						// if all terminator chars are matched in exact order
+						if(isr_match_index == terminator_len)
+						{
+							// reset isr_match_index
+							isr_match_index = 0;
+							
+							// increment string_len since a valid string terminated by terminator is found
+							string_len++;
+						}
+					}
+					// if not (i.e. data != terminator[isr_match_index]), reset isr_match_index to check from first terminator char
+					else
+					{
+						// simple overlap handling: if the current byte equals first terminator byte,
+						// set index = 1 (we matched first byte), else reset to 0
+						if (data == terminator_string[0])
+							isr_match_index = 1;
+						else
+							isr_match_index = 0;
+					}
+				}
+			#endif
 		}
 	}
 
 	static unsigned int available(void)
 	{
 		return (unsigned int)ringbuf_count(&buffer_struct_rx);
-	}
+	} 
+	
+	// Function to read a single byte from Rx buffer
+	#ifdef SERIAL_LINE_ENABLE
+		static mos_uint8_t read(void)
+		{			
+			// Check if atomic is off
+			mos_uint8_t temp;
 
-	static mos_uint8_t read(void)
-	{
-		return ringbuf_read(&buffer_struct_rx);
-	}
+			temp = IS_ATOMIC_OFF();
+			
+			// if atomic is off then switch it on
+			if(temp)
+				ATOMIC_ON();
+					
+			// check if rx buffer is empty
+			if(!ringbuf_count(&buffer_struct_rx))
+			{
+				// If Rx buffer is empty string_len must be zero, hence setting it zero
+				// This step must be done atomic since interrupt can change its value in between
+				string_len = 0;
+				
+				// if atomic was switched on then only switch it off
+				if(temp)
+					ATOMIC_OFF();
+				
+				return 0xFF;
+			}
+			
+			// if atomic was switched on then only switch it off
+			if(temp)
+				ATOMIC_OFF();
+				
+			// read single byte from Rx buffer
+			mos_uint8_t data = ringbuf_read(&buffer_struct_rx);
+			
+			// Check if terminator_len is zero, else no point in checking for terminator characters
+			if(!terminator_len)
+				return data;
+				
+			// check if data = terminator[read_match_index]
+			// read_match_index holds the current terminator array index if previous terminator char was matched. 
+			if(data == terminator_string[read_match_index])
+			{
+				// increment read_match_index to match next terminator char
+				read_match_index++;
+				
+				// if all terminator chars are matched in exact order
+				if(read_match_index == terminator_len)
+				{
+					// reset read_match_index
+					read_match_index = 0;
+					
+					// This step is for readString function. 
+					// It indicates that string has been read successfully
+					// reset string_completed_in_read if it is set by readString function
+					if(string_completed_in_read)
+						string_completed_in_read = 0;
+					
+					temp = IS_ATOMIC_OFF();
+						
+					// if atomic is off then switch it on
+					if(temp)
+						ATOMIC_ON();
+					
+					// Check if string_len is non zero, Decrement only if string_len is non zero.
+					// Although not mandatory, it is always good to write safe codes for any potential logical code errors
+					// This step must be done atomic since interrupt can change its value in between
+					if(string_len)
+						string_len--;
+					
+					// if atomic was switched on then only switch it off
+					if(temp)
+						ATOMIC_OFF();
+				}			
+			}
+			
+			// if not (i.e. data != terminator[read_match_index]), reset read_match_index to check from first terminator char
+			else
+			{
+				// simple overlap handling: if the current byte equals first terminator byte,
+				// set read_match_index = 1 (we matched first byte), else reset to 0
+				if (data == terminator_string[0])
+					read_match_index = 1;
+				else
+					read_match_index = 0;
+			}			
+			return data;
+		}
+	#else
+		static mos_uint8_t read(void)
+		{
+			return ringbuf_read(&buffer_struct_rx);
+		}
+	#endif
 
-	static void flush(void)
-	{
-		ringbuf_flush(&buffer_struct_rx);
-	}
-
+	//Function to delete all bytes in Rx buffer
+	#ifdef SERIAL_LINE_ENABLE
+		static void flush(void)
+		{
+			mos_uint8_t temp;
+			
+			// Check if atomic is off
+			temp = IS_ATOMIC_OFF();
+			
+			// if atomic is off then switch it on
+			if(temp)
+				ATOMIC_ON();
+			
+			// reset Uart Rx specific global variables
+			string_len = 0;
+			read_match_index = 0;
+			isr_match_index = 0;
+			
+			// flush (delete all bytes in) Rx buffer
+			ringbuf_flush(&buffer_struct_rx);
+			
+			// if atomic was switched on then only switch it off
+			if(temp)
+				ATOMIC_OFF();
+		}
+	#else
+		static void flush(void)
+		{
+			ringbuf_flush(&buffer_struct_rx);
+		}
+	#endif
+	
+	#ifdef SERIAL_LINE_ENABLE
+	
+		// set terminator bytes
+		static void terminator(void * term_temp, mos_uint8_t len)
+		{			
+			mos_uint8_t * term = (mos_uint8_t *) term_temp;
+			
+			// Set terminator_len
+			terminator_len = len;
+			
+			// make sure terminator length is <= 10
+			// Setting it zero effectively, remove readString functionality
+			if( len <= 10)
+			{
+				// run while loop len times
+				while(len)
+				{
+					// save terminator bytes in terminator variable
+					// bytes are saved in reverse order for easy coding
+					terminator_string[len-1] = term[len-1];
+					
+					// decrement len, effectively saving len bytes in terminator variable
+					len--;
+				}
+			}
+			
+			// Flushing discards all previous data in Rx buffer
+			// Since old strings are no more terminated by new terminator bytes hence invalid
+			flush();
+		}
+		
+		// returns number of valid strings available in Rx buffer which are terminated by terminator
+		static unsigned int stringAvailable(void)
+		{
+			unsigned int temp;
+			mos_uint8_t atomic_state;
+			
+			atomic_state = IS_ATOMIC_OFF();
+			if(atomic_state)
+				ATOMIC_ON();
+			
+			temp = string_len;
+			
+			if(atomic_state)
+				ATOMIC_OFF();
+			
+			return temp;			
+		}
+		
+		// Function to read one string from Rx Buffer
+		static unsigned int readString(char * data, int max_len)
+		{
+			// Check if string_len is non zero i.e. Rx buffer contains valid strings
+			if(string_len)
+			{
+				unsigned int count=0;
+				
+				// this is global variable, which is reset by read function after a valid string is read from Rx Buffer
+				string_completed_in_read = 1;
+				
+				// keep storing bytes till valid string is read or Rx buffer is empty
+				while(string_completed_in_read && ringbuf_count(&buffer_struct_rx))
+				{
+					// store bytes from rx buffer into data variable up to max_len-1
+					// one space in data variable is left for Null character at the end
+					if(count < max_len-1)
+					{
+						*data = read();
+						data++;
+					}
+					// if data variable is full, simply read from rx buffer to discard bytes
+					else
+						read();
+					
+					count++;
+				}
+				
+				// Add Null character in the end
+				*data ='\0';
+				
+				// Reset string_completed_in_read variable in case Rx buffer is empty before valid string is read
+				string_completed_in_read = 0;
+				
+				// return number of bytes in the read string
+				return count;
+			}
+			return 0;
+		}
+	#endif
 #endif
 
 // UART Tx Functions
@@ -348,155 +651,136 @@ static void end(void)
 			ISR(UART_TX_INTERRUPT_ISR)
 		#endif
 		{
-			//UART_CONTROL1 &= ~(1<<UART_CONTROL1_UDRIE_ENABLE_BIT);
-			UART_DATA = ringbuf_read_noAtomic(&buffer_struct_tx);
-			UART_STATUS |= (1<<UART_STATUS_TX_COMPLETE_BIT);
+			// Read data byte from Tx buffer and write to uart data buffer register
+			UART_DATA = ringbuf_read(&buffer_struct_tx);
+			
+			// if Tx buffer is empty
 			if(ringbuf_count(&buffer_struct_tx)==0)
-				UART_CONTROL1 &= ~(1<<UART_CONTROL1_UDRIE_ENABLE_BIT);				
-				//UART_CONTROL1 |= (1<<UART_CONTROL1_UDRIE_ENABLE_BIT);				
+			{				
+				// Disable DRE interrupt (no more data)
+				UART_CONTROL1 &= ~(1<<UART_CONTROL1_UDRIE_ENABLE_BIT);
+				
+				// Clear TXCIF now so that txComplete() will work correctly
+				// TXCIF is cleared by writing 1 to it
+				UART_STATUS |= (1 << UART_STATUS_TX_COMPLETE_BIT);
+			}
 		}
 	#endif
-
+	
+	// Function to transmit single byte
 	static void write(mos_uint8_t data)
 	{
-		
 		#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
 			mos_uint8_t atomic_status = 0;
 			
-			atomic_status = IS_ATOMIC_ON();
-			if(!atomic_status)
+			// writing directly to transmit buffer or into Tx buffer must be atomic
+			atomic_status = IS_ATOMIC_OFF();
+			if(atomic_status)
 				ATOMIC_ON();
 			
-			if( ( ringbuf_count(&buffer_struct_tx) == 0 ) && ( ( UART_STATUS & (1 << UART_STATUS_UDR_EMPTY_BIT) ) != 0) )
-					UART_DATA = data;
-			else if( !ringbuf_isfull(&buffer_struct_tx) )
+			// If Tx buffer is empty as well as Transmit buffer register is also empty
+			// Then directly write data byte to Transmit buffer register instead of Tx buffer
+			if( ( ringbuf_count(&buffer_struct_tx) == 0 ) && ( UART_STATUS & (1 << UART_STATUS_UDR_EMPTY_BIT) ) )
 			{
+				// Clear TXCIF before sending first byte
+				UART_STATUS |= (1 << UART_STATUS_TX_COMPLETE_BIT);
+				// Write byte to transmit buffer register
+				UART_DATA = data;
+			}
+			// Other wise if Tx buffer is not full then
+			else if( ringbuf_isfull(&buffer_struct_tx) == 0)
+			{
+				// Write byte to Tx buffer
 				ringbuf_write(&buffer_struct_tx,data);
-				if((UART_CONTROL1 & (1<<UART_CONTROL1_UDRIE_ENABLE_BIT))==0)
-					UART_CONTROL1 |= (1<<UART_CONTROL1_UDRIE_ENABLE_BIT);
+				// Enable interrupt on transmit buffer register empty
+				UART_CONTROL1 |= (1<<UART_CONTROL1_UDRIE_ENABLE_BIT);
 			}
 			
-			if(!atomic_status)
+			if(atomic_status)
 				ATOMIC_OFF();
 		#else
-			while (!(UART_STATUS & (1 << UART_STATUS_UDR_EMPTY_BIT)));
+			// Wait untill transmit buffer register is not empty
+			while (!(UART_STATUS & (1 << UART_STATUS_UDR_EMPTY_BIT)))
+				;
+			// Clear TX complete bit before sending
+			UART_STATUS |= (1 << UART_STATUS_TX_COMPLETE_BIT);
+			// Write byte to transmit buffer register
 			UART_DATA = data;
 		#endif
 	}
-
+	
+	// Function to print to Uart Tx
 	static void print(char *data)
-	{
-		#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
-			mos_uint8_t atomic_status = 0;
-			
-			atomic_status = IS_ATOMIC_ON();
-			if(!atomic_status)
-				ATOMIC_ON();
-		#endif
-			
+	{			
+		// return if null pointer is passed
+		if (!data) return;
+		
+		// Write till null character is found in data string
 		while (*data)
 		{
 			write((mos_uint8_t)(*data));
 			data++;
 		}
-		
-		#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
-			if(!atomic_status)
-				ATOMIC_OFF();
-		#endif
-		
 	}
 
 	static void println(char *data)
-	{
-		#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
-			ATOMIC_ON();
-		#endif
-		
+	{	
+		// return if null pointer is passed
+		if (!data) return;
+	
+		// Print data to Uart Tx, append carriage return and new line char in the end
 		print(data);
 		write('\r');
 		write('\n');
-		
-		#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
-			ATOMIC_OFF();
-		#endif
 	}
 	
 	#ifdef PLATFORM_SUPPORT_CONST_PRINT
-	
+		
+		// Function similar to print function, print data string saved in flash
 		static void constPrintArch(const char *data)
-		{
-			#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
-				mos_uint8_t atomic_status = 0;
-				
-				atomic_status = IS_ATOMIC_ON();
-				if(!atomic_status)
-					ATOMIC_ON();
-			#endif
-			
+		{	
 			while (pgm_read_byte(data))
 			{
 				write(pgm_read_byte(data));
 				data++;
 			}
-			
-			#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
-				if(!atomic_status)
-					ATOMIC_OFF();
-			#endif
 		}
-
+		
+		// Function similar to println function, print data string saved in flash
 		static void constPrintlnArch(const char *data)
-		{
-			#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
-				ATOMIC_ON();
-			#endif
-			
+		{	
 			constPrintArch(data);
 			write('\r');
 			write('\n');
-			
-			#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
-				ATOMIC_OFF();
-			#endif
 		}
 	
 	#endif
 
 	static void printBytes(mos_uint8_t * data, mos_uint16_t len)
 	{
-		#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
-			ATOMIC_ON();
-		#endif
+		// Print data to Uart Tx of length len
 		while (len)
 		{
 			write(*data);
 			data++;
 			len--;
 		}
-		#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
-			ATOMIC_OFF();
-		#endif
 	}
 	
+	// Function to check if complete data is transmitted by the UART
 	static mos_uint8_t txComplete(void)
 	{
 		#ifdef UART_TX_INTERRUPT_ENABLE_TEMP
-			if(ringbuf_count(&buffer_struct_tx) == 0)
-			{
-				if(UART_STATUS & (1 << UART_STATUS_TX_COMPLETE_BIT))
-					return 1;
-				else
-					return 0;
-			}
-			else
-				return 0;
-		#else
-			if(UART_STATUS & (1 << UART_STATUS_TX_COMPLETE_BIT))
-				return 1;
-			else
+			// If Tx buffer is not empty, means data is not fully transmitted yet
+			if(ringbuf_count(&buffer_struct_tx))
 				return 0;
 		#endif
+		
+		// If TX complete bit status is 1 then full data is transmitted else not
+		if(UART_STATUS & (1 << UART_STATUS_TX_COMPLETE_BIT))
+			return 1;
+		else
+			return 0;
 	}
 #endif
 
@@ -515,6 +799,11 @@ const struct serial_driver UART_DRIVER = {
 	#endif
 	printBytes,
 	txComplete,
+	#ifdef SERIAL_LINE_ENABLE
+		terminator,
+		stringAvailable,
+		readString,
+	#endif
 };
 
 // Un-define generic Macros for UART registers
@@ -539,6 +828,7 @@ const struct serial_driver UART_DRIVER = {
 #undef UART_CONTROL1_TX_ENABLE_BIT
 #undef UART_CONTROL1_RX_ENABLE_BIT
 #undef UART_CONTROL1_UDRIE_ENABLE_BIT
+#undef UART_CONTROL1_TXCIE_ENABLE_BIT
 #undef UART_CONTROL1_RXCIE_ENABLE_BIT
 
 #undef UART_CONTROL2_CHAR_SIZE_BIT0
@@ -546,7 +836,6 @@ const struct serial_driver UART_DRIVER = {
 #undef UART_CONTROL2_STOP_SIZE_BIT
 #undef UART_CONTROL2_PARITY_MODE_BIT0
 #undef UART_CONTROL2_PARITY_MODE_BIT1
-#undef UART_CONTROL2_REG_SEL_BIT
 
 // Un-define generic Macros for UART config Macros
 #undef RX_BUFFER_SIZE_TEMP

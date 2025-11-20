@@ -1,0 +1,10 @@
+ifeq ($(CONTROLLER),XMEGA256)
+	CONTROLLER_DEF = 1
+endif
+
+ifdef CONTROLLER_DEF
+	CDEFS += -DCONTROLLER=$(CONTROLLER)
+	include $(MOREY_OS_PATH)/arch/$(CPU)/$(CPU_SERIES)/boot/$(CONTROLLER)/Makefile$(CONTROLLER).controllerlist
+endif
+	
+

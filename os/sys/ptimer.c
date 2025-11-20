@@ -90,6 +90,7 @@ static mos_uint8_t compare_ptimer_expiry(struct task_struct_os *p_compare , stru
 
 TASK_CREATE(ptimer_task, "PTIMER TASK");
 
+/*
 //---------------------------------------------------------------------------//
 TASK_RUN(ptimer_task)
 {	
@@ -150,6 +151,105 @@ TASK_RUN(ptimer_task)
 
   TASK_END();
 }
+*/
+
+//---------------------------------------------------------------------------//
+TASK_RUN(ptimer_task)
+{	
+    TASK_BEGIN();
+
+    while (1) 
+    {	  
+        TASK_WAIT_EVENT_UNTIL(ev == TASK_EVENT_POLL);
+        PTIMER_DEBUG_MSG3("PTIMER Called", &ptimer_task);
+
+        struct task_struct_os *p = ptimer_list;
+        struct task_struct_os *prev = NULL;
+        struct task_struct_os *next = NULL;
+
+        // Traverse the ptimer list safely
+        while (p != NULL)
+        {
+            next = p->ptimer_next;   // store next pointer early (important!)
+
+            if (ptimer_expired(p))
+            {
+                // Try to post event to expired timer task
+                if (task_post(p, TASK_EVENT_PTIMER, NULL) == TASK_ERR_OK)
+                {
+                    PTIMER_DEBUG_MSG3("Timer event post success", p);
+
+                    // Remove this task from ptimer list
+                    if (prev == NULL)
+                    {
+                        // Removing head
+                        ptimer_list = next;
+                    }
+                    else
+                    {
+                        // Removing middle or tail node
+                        prev->ptimer_next = next;
+                    }
+
+                    // Clean up task's timer linkage and mark inactive
+                    p->ptimer_next = NULL;
+                    p->ptimer_state = PTIMER_RESET;
+
+                    // Do not update prev here, because current node was removed
+                }
+                else
+                {
+                    // Failed to post event -> reschedule poll
+                    PTIMER_DEBUG_MSG3("Timer event post failure", p);
+                    ptimer_request_poll();
+
+                    // Stop scanning for now to retry later
+                    break;
+                }
+            }
+            else
+            {
+                // No more expired timers; since list is sorted by expiry,
+                // we can safely break early for efficiency.
+                break;
+            }
+
+            // Advance iteration pointer
+            p = next;
+        }
+
+#ifdef PLATFORM_SUPPORT_TICKLESS
+        // If at least one timer remains, schedule the next tickless wakeup
+        if (ptimer_list != NULL)
+        {
+            PTIMER_DEBUG_MSG3("check for tickless schedule", ptimer_list);
+            schedule_tickless_timer(ptimer_list);
+        }
+#endif
+
+        // Optional: Debug the full timer list contents (level 3)
+        PTIMER_DEBUG_MSG3_NO_NEWLINE("ptimer list = ", NULL);
+#if (PTIMER_DEBUG_LEVEL >= PTIMER_DEBUG_LEVEL3)
+#ifdef TASK_HAS_STRING_NAMES
+        {
+            struct task_struct_os *p1;
+            for (p1 = ptimer_list; p1 != NULL; p1 = p1->ptimer_next)
+            {
+                DEBUG_PRINT((char *)TASK_NAME_STRING(p1));
+                if (p1->ptimer_next != NULL)
+                    DEBUG_PRINT(", ");
+            }
+            DEBUG_PRINT_LN("");
+        }
+#else
+        DEBUG_PRINT_LN("TASK_HAS_STRING_NAMES_CONF macro not defined");
+#endif
+#endif
+    }
+
+    TASK_END();
+}
+
 
 //---------------------------------------------------------------------------//
 void ptimer_request_poll(void)
@@ -171,6 +271,14 @@ void ptimer_set_reset(struct task_struct_os *p, float delay, mos_uint8_t mode)
 	clock_second_t seconds, seconds_temp;
 	clock_millisecond_t milliseconds, milliseconds_temp;
 	mos_uint32_t temp;
+	
+	if (p == NULL) 
+	{
+		PTIMER_DEBUG_MSG1("Null task pointer", NULL);
+		return;
+	}
+	if (delay < 0.0f) delay = 0.0f;
+
   
 	if( mode == PTIMER_RESET )
 	{
@@ -246,7 +354,7 @@ mos_uint8_t ptimer_expired(struct task_struct_os *p)
 
 //---------------------------------------------------------------------------//
 /** 
-* \brief	This fuctions includes ptimer of called Task in ptimer linked list
+* \brief	This functions includes ptimer of called Task in ptimer linked list
 * \param p   	A pointer to the Task
 * \return void	
 *
@@ -254,7 +362,7 @@ mos_uint8_t ptimer_expired(struct task_struct_os *p)
 * this function is called. This function includes ptimer of called Task **p** into
 * ptimer linked list. By putting it on ptimer linked list, called Task **p** will
 * be woken up by ptimer Task after expiry of set time. In Ptimer linked list,
-* ptimers of different taskes are arranged in ascending order of their respective
+* ptimers of different tasks are arranged in ascending order of their respective
 * expiry time.
 */
 static void schedule_ptimer(struct task_struct_os * p)

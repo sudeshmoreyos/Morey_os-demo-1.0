@@ -206,7 +206,8 @@ program_text:
 
 # Display size of file.
 # HEXSIZE = $(SIZE) --target=$(FORMAT) $(EXEDIR)/$(PROJECT).hex
-ELFSIZE = $(SIZE) --mcu=$(MCU) --format=avr $(EXEDIR)/$(PROJECT).elf
+# ELFSIZE = $(SIZE) --mcu=$(MCU) --format=avr $(EXEDIR)/$(PROJECT).elf
+ELFSIZE = $(SIZE) $(EXEDIR)/$(PROJECT).elf
 
 sizebefore:
 	@if test -f $(EXEDIR)/$(PROJECT).elf; then echo; echo $(MSG_SIZE_BEFORE); $(ELFSIZE); \

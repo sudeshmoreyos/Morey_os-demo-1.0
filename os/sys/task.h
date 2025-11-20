@@ -87,10 +87,12 @@ typedef mos_uint8_t task_num_events_t;		///< typedef for variables keeping the c
 #define TASK_EVENT_TIMER                0x88
 #define TASK_EVENT_COM                  0x89
 #define TASK_EVENT_MAX                  0x8a
-#define TASK_EVENT_SUBTASK_CALL		0x8b
+#define TASK_EVENT_SUBTASK_CALL			0x8b
 #define TASK_EVENT_SUBTASK_RETURN     	0x8c
 #define TASK_EVENT_PTIMER               0x8d
-#define TASK_BROADCAST                  0x00
+
+// #define TASK_BROADCAST               0x00
+#define TASK_BROADCAST                  NULL
 ///@}
 
 /**
@@ -107,37 +109,55 @@ typedef mos_uint8_t task_num_events_t;		///< typedef for variables keeping the c
 * \name MACROS : TASK THREAD (PT) OS Core MACROS
 * @{
 */
+
+/*
 /// This macro starts the execution part of task thread (PT)
-#define TASK_BEGIN()				\
-{                                           	\
-    mos_uint8_t PT_FLAG_VAR_ = 1;           	\
+#define TASK_BEGIN()						\
+{                                           \
+    mos_uint8_t PT_FLAG_VAR_ = 1;           \
     switch (task_current->position)      	\
     {   case 0:                             
     
 /// This macro ends the execution part of task thread (PT)   
 #define TASK_END()                       	\
-    }                                       	\
+    }                                       \
     task_current->position = 0;          	\
-    return PT_ENDED;                        	\
+    return PT_ENDED;                        \
 }
+*/
+
+/// This macro starts the execution part of task thread (PT)
+#define TASK_BEGIN()                                        \
+do {                                                        \
+    mos_uint8_t PT_FLAG_VAR_ = 1;                           \
+    switch (task_current->position) {                       \
+        case 0:
+
+#define TASK_END()                                          \
+        default: break;                                     \
+    }                                                       \
+    task_current->position = 0;                             \
+    return PT_ENDED;                                        \
+} while (0)
+
 
 /// This macro returns control from a task thread to OS
 #define TASK_WAIT_EVENT()                	\
-do {                                        	\
-    PT_FLAG_VAR_ = 0;                       	\
+do {                                        \
+    PT_FLAG_VAR_ = 0;                       \
     task_current->position = __LINE__;   	\
-    case __LINE__ :                         	\
-          if( PT_FLAG_VAR_ == 0 )           	\
-           {                                	\
-		return PT_YIELDED; 	        \
+    case __LINE__ :                         \
+          if( PT_FLAG_VAR_ == 0 )           \
+           {                                \
+		return PT_YIELDED; 	        		\
            }                            	\
 } while(0)
 
 /// This macro is same as TASK_WAIT_EVENT except that it also checks a condition   
-#define TASK_WAIT_EVENT_UNTIL(condition) 		\
+#define TASK_WAIT_EVENT_UNTIL(condition) 			\
 do {                                        		\
     PT_FLAG_VAR_ = 0;                       		\
-    task_current->position = __LINE__;   		\
+    task_current->position = __LINE__;   			\
     case __LINE__ :                         		\
         if((PT_FLAG_VAR_ == 0) || !(condition))  	\
         {                                   		\
@@ -146,17 +166,17 @@ do {                                        		\
 } while(0)
 
 /// This macro exits the current task before it reaches TASK_END
-#define TASK_EXIT()				\
-do {                                        	\
-        task_current->position = 0;      	\
-        return PT_EXITED;                   	\
+#define TASK_EXIT()						\
+do {                                    \
+        task_current->position = 0;     \
+        return PT_EXITED;               \
 } while(0)
 
-///If there are more than one user auto start taskes, this macro is used to pause current task untill all other taskes are started after that this task start again from this point only
-#define TASK_PAUSE()							\
-do {                                        				\
-        task_post(TASK_CURRENT(), TASK_EVENT_CONTINUE, NULL);  		\
-        TASK_WAIT_EVENT_UNTIL(ev == TASK_EVENT_CONTINUE);         	\
+///If there are more than one user auto start tasks, this macro is used to pause current task untill all other tasks are started after that this task start again from this point only
+#define TASK_PAUSE()											\
+do {                                        					\
+        task_post(TASK_CURRENT(), TASK_EVENT_CONTINUE, NULL);  	\
+        TASK_WAIT_EVENT_UNTIL(ev == TASK_EVENT_CONTINUE);       \
 }while(0)
 ///@}
 
@@ -268,7 +288,7 @@ int task_post(struct task_struct_os * p, task_event_t ev, task_data_t data);
 * \return void	
 *
 *	This function polls a task whose pointer is provided by input parameter **p**.
-*	Polling is method to service high priority taskes.
+*	Polling is method to service high priority tasks.
 *	In every run loop, OS serivce a Polled event and a normal event.
 *	By this way polled event will have higher chances of getting serviced.
 *	However it still can't gaurantee real time service.
@@ -281,7 +301,7 @@ void task_poll(struct task_struct_os *p);
 *
 *	This function should be called repeatedly from the main() program
 *	to actually run the Contiki system. It calls the necessary poll
-*	handlers, and taskes one event. The function returns the number
+*	handlers, and tasks one event. The function returns the number
 *	of events that are waiting in the event queue so that the caller
 *	may choose to put the CPU to sleep when there are no pending
 *	events.
@@ -295,7 +315,7 @@ int task_run(void);
 */
 int task_is_running(struct task_struct_os *p);
 
-/// Function to autostart taskes
+/// Function to autostart tasks
 void task_autostart(struct task_struct_os * const tasks[]);
 ///@}
 
@@ -323,7 +343,7 @@ extern struct task_struct_os *task_list;
 /// This macro is used to get the pointer to task_list
 #define TASK_LIST() task_list
 
-/// Declare AUTOSTART_TASKES used to auto start selected taskes after boot
+/// Declare AUTOSTART_TASKES used to auto start selected tasks after boot
 #define TASK_AUTOSTART(...)						\
 struct task_struct_os * autostart_tasks[] = {__VA_ARGS__, NULL}
 

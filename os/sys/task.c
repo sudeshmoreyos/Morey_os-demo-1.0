@@ -92,13 +92,14 @@ void task_init(void)
   TASK_DEBUG_MSG3("Task kernel Initiated",NULL);
 }
 
+/*
 //---------------------------------------------------------------------------//
 void task_start(struct task_struct_os *p, task_data_t data)
 {
   struct task_struct_os *q;
 
   //First make sure that we don't try to start a task that is already running.
-  for(q = task_list; q != p && q != NULL; q = q->next);
+  for(q = task_list; q != NULL && q != p; q = q->next);
 
   //If we found the task on the task list, we bail out. //
   if(q == p) {
@@ -121,6 +122,45 @@ void task_start(struct task_struct_os *p, task_data_t data)
   call_task(p, TASK_EVENT_INIT , data);
   task_current = q;
 }
+*/
+
+//---------------------------------------------------------------------------//
+void task_start(struct task_struct_os *p, task_data_t data)
+{
+    struct task_struct_os *q;
+
+    // First make sure that we don't try to start a task that is already running.
+    for (q = task_list; q != NULL && q != p; q = q->next);
+
+    // If we found the task on the task list, we bail out.
+    if (q == p) {
+        TASK_DEBUG_MSG1("Task already running, start failed", p);
+        return;
+    } else {
+        TASK_DEBUG_MSG1("Task started", p);
+    }
+
+    // Initialize all task fields properly before linking
+    p->next = task_list;              // link into task list
+    p->state = TASK_STATE_RUNNING;    // mark as running
+    p->position = 0;                  // start from beginning
+    p->needspoll = 0;                 // clear poll request
+    p->data = NULL;                   // clear previous data
+    p->data2 = NULL;
+    p->ptimer_next = NULL;            // no pending ptimer link
+    p->expiry_seconds = 0;            // clear timers
+    p->expiry_milliseconds = 0;
+    p->ptimer_state = 0;
+
+    // Insert this task at head of the task list
+    task_list = p;
+
+    // Post a synchronous initialization event to the task, i.e. call this task once
+    q = task_current;
+    call_task(p, TASK_EVENT_INIT, data);
+    task_current = q;
+}
+
 
 //---------------------------------------------------------------------------//
 void task_exit(struct task_struct_os *p)
@@ -296,17 +336,19 @@ static void do_event(void)
 //---------------------------------------------------------------------------//
 int task_run(void)
 {
-  TASK_DEBUG_MSG3("Task run",NULL);
-  // Task poll events. //
-  if(poll_requested) 
-  {
-    do_poll();
-  }
+	TASK_DEBUG_MSG3("Task run",NULL);
+	// Task poll events. //
+	if(poll_requested) 
+	{
+		do_poll();
+		TASK_DEBUG_MSG3("do_poll complete",NULL);
+	}
 
-  // Task one event from the queue
-  do_event();
-
-  return nevents + poll_requested;
+	// Task one event from the queue
+	do_event();
+	TASK_DEBUG_MSG3("do_event complete",NULL);
+	
+	return nevents + poll_requested;
 }
 
 //---------------------------------------------------------------------------//
@@ -347,7 +389,9 @@ void task_poll(struct task_struct_os *p)
 //---------------------------------------------------------------------------//
 int task_is_running(struct task_struct_os *p)
 {
-  return p->state != TASK_STATE_NONE;
+  // return p->state != TASK_STATE_NONE;
+  return (p != NULL) && (p->state != TASK_STATE_NONE);
+
 }
 
 //---------------------------------------------------------------------------//

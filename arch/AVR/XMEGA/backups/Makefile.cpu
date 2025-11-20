@@ -1,0 +1,10 @@
+SRC += arch/$(CPU)/$(CPU_SERIES)/drivers/avr_xmega_digital.c
+SRC += arch/$(CPU)/$(CPU_SERIES)/drivers/calculate_baudrate.c
+SRC += arch/$(CPU)/$(CPU_SERIES)/drivers/avr_xmega_uartc0.c
+SRC += arch/$(CPU)/$(CPU_SERIES)/drivers/avr_xmega_uartc1.c
+SRC += arch/$(CPU)/$(CPU_SERIES)/drivers/avr_xmega_uartd0.c
+SRC += arch/$(CPU)/$(CPU_SERIES)/drivers/avr_xmega_uartd1.c
+SRC += arch/$(CPU)/$(CPU_SERIES)/drivers/avr_xmega_uarte0.c
+SRC += arch/$(CPU)/$(CPU_SERIES)/drivers/avr_xmega_uarte1.c
+SRC += arch/$(CPU)/$(CPU_SERIES)/drivers/avr_xmega_uartf0.c
+SRC += arch/$(CPU)/$(CPU_SERIES)/drivers/avr_xmega_uartf1.c

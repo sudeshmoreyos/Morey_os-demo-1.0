@@ -1,0 +1,17 @@
+ifdef FREQ
+
+F_CPU = $(FREQ)
+CDEFS += -DCONTROLLER_FREQ_CONF=$(FREQ)UL
+
+else
+
+F_CPU = 16000000
+$(warning WARNING : Default 16MHz frequency is chosen for atmega16 controller)
+
+endif
+
+MCU = atmega16
+
+ifndef MCU_AVRDUDE
+MCU_AVRDUDE = m16
+endif

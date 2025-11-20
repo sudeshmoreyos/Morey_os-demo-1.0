@@ -1,0 +1,10 @@
+PROJECT = led_blink
+MOREY_OS_PATH = ../../..
+
+ARCH = AVR_MEGA
+CONTROLLER = MEGA16
+#FREQ = 16000000
+
+#BOARD = ARDUINO_UNO
+
+include $(MOREY_OS_PATH)/Makefile.include

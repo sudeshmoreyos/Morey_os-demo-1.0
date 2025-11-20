@@ -42,36 +42,43 @@
 #define D6 0x1E
 #define D7 0x1F
 
-// Os pin mapping with controller pins
-#define P0 D0
-#define P1 D1
-#define P2 D2
-#define P3 D3
-#define P4 D4
-#define P5 D5
-#define P6 D6
-#define P7 D7
+// User can define Custom OS pins for easy portability
+// By defining macro DEFINE_CUSTOM_OS_PINS in config.h
+#ifndef DEFINE_CUSTOM_OS_PINS
 
-#define P8 B0
-#define P9 B1
-#define P10 B2
-#define P11 B3
-#define P12 B4
-#define P13 B5
+	// if not Default OS pins are mapped with controller pins as below
+	#define OS_pin0 D0
+	#define OS_pin1 D1
+	#define OS_pin2 D2
+	#define OS_pin3 D3
+	#define OS_pin4 D4
+	#define OS_pin5 D5
+	#define OS_pin6 D6
+	#define OS_pin7 D7
 
-#define P14 C0
-#define P15 C1
-#define P16 C2
-#define P17 C3
-#define P18 C4
-#define P19 C5
+	#define OS_pin8 B0
+	#define OS_pin9 B1
+	#define OS_pin10 B2
+	#define OS_pin11 B3
+	#define OS_pin12 B4
+	#define OS_pin13 B5
 
-#define P20 B6
-#define P21 B7
+	#define OS_pin14 C0
+	#define OS_pin15 C1
+	#define OS_pin16 C2
+	#define OS_pin17 C3
+	#define OS_pin18 C4
+	#define OS_pin19 C5
+
+	#define OS_pin20 B6
+	#define OS_pin21 B7
+
+#endif
 
 // Declare Macros for Serial UART supported by controller/platform
 #define PLATFORM_SUPPORT_UART
 #define PLATFORM_SUPPORT_CONST_PRINT
+
 #define UART0_AVAILABLE
 
 #define UART0_PORT 1
@@ -86,18 +93,22 @@
 #define MCU_UART0_RX_INTERRUPT_ISR	USART_RX_vect
 #define MCU_UART0_TX_INTERRUPT_ISR	USART_UDRE_vect
 
+// If Serial Port is configured by user
 #ifdef SERIAL_PORT_CONF
 	#define SERIAL_PORT SERIAL_PORT_CONF
 #endif
 
+// If Serial0 Port is configured by user
 #ifdef SERIAL0_PORT_CONF
 	#define SERIAL0_PORT SERIAL0_PORT_CONF
 #endif
 
+// If SERIAL_PORT is defined above, assign it to SERIAL0_PORT
 #ifdef SERIAL_PORT
 	#define SERIAL0_PORT SERIAL_PORT
 #endif
 
+// If SERIAL0_PORT is not defined by user or above, give it default value UART0_PORT
 #ifndef SERIAL0_PORT
 	#define SERIAL0_PORT UART0_PORT
 #endif

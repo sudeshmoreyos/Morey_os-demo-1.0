@@ -1,0 +1,10 @@
+PROJECT = lcd-demo
+MOREY_OS_PATH = ../..
+
+CONTROLLER = MEGA328P
+ARCH = AVR_MEGA
+#FREQ = 1000000
+
+#BOARD = ARDUINO_UNO
+
+include $(MOREY_OS_PATH)/Makefile.include

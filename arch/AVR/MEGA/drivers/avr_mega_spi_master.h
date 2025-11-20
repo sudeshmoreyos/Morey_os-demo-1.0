@@ -25,6 +25,7 @@
 		
 	#endif
 	
-	extern const struct spi_master_driver avr_mega_spi_master_driver;		
-#endif
-#endif
+	extern const struct spi_master_driver avr_mega_spi_master_driver;	
+	
+#endif // defined(PLATFORM_SUPPORT_SPI) && defined(SPI_AVAILABLE)
+#endif // AVR_MEGA_SPI_MASTER_H

@@ -1,0 +1,9 @@
+ifdef FREQ
+	F_CPU = $(FREQ)
+	CDEFS += -DCONTROLLER_FREQ_CONF=$(FREQ) 
+else
+	F_CPU = 32000000
+    $(warning WARNING : Default 32MHz frequency is chosen for atxmega256 controller)
+endif
+
+MCU = atxmega256a3u

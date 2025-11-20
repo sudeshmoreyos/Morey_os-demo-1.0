@@ -1,6 +1,8 @@
 #ifndef BOOT_H
 #define BOOT_H
 
+// words to replace : MEGA8, atmega8
+
 /** \addtogroup headers_MEGA8
 * @{ \defgroup boot_MEGA8_h
 * @{

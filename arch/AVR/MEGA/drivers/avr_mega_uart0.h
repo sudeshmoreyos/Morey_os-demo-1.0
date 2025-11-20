@@ -129,7 +129,7 @@
 		#ifdef SERIAL3_TX_INTERRUPT_ENABLE
 			#define UART0_TX_INTERRUPT_ENABLE SERIAL3_TX_INTERRUPT_ENABLE
 		#endif
-	#endif
+	#endif // SERIAL0_PORT == UART0_PORT
 		
 	#if UART0_ENABLE == 1
 			
@@ -154,8 +154,10 @@
 			#define Serial3 avr_mega_uart0_driver
 		#endif
 		
-		extern const struct serial_driver avr_mega_uart0_driver;		
-	#endif
-#endif
+		extern const struct serial_driver avr_mega_uart0_driver;
+		
+	#endif // UART0_ENABLE == 1
+	
+#endif // defined(PLATFORM_SUPPORT_UART) && defined(UART0_AVAILABLE)
 
-#endif
+#endif // AVR_MEGA0_UART1_H

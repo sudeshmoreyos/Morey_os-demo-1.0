@@ -33,6 +33,33 @@
 				#include "AVR/MEGA/drivers/avr_mega_uart3.h"
 			#endif
 			
+		#elif CPU_SERIES == MEGA0
+		
+			#ifdef PLATFORM_SUPPORT_CONST_PRINT
+				#include "avr/pgmspace.h"		
+				#define constPrint(x) 	constPrintArch(PSTR(x))
+				#define constPrintln(x) constPrintlnArch(PSTR(x))
+			#else
+				#define constPrint(x) 	Print(x)
+				#define constPrintln(x) Println(x)
+			#endif
+			
+			#ifdef UART0_AVAILABLE
+				#include "AVR/MEGA0/drivers/avr_mega0_uart0.h"
+			#endif
+			
+			#ifdef UART1_AVAILABLE
+				#include "AVR/MEGA0/drivers/avr_mega0_uart1.h"
+			#endif
+			
+			#ifdef UART2_AVAILABLE
+				#include "AVR/MEGA0/drivers/avr_mega0_uart2.h"
+			#endif
+			
+			#ifdef UART3_AVAILABLE
+				#include "AVR/MEGA0/drivers/avr_mega0_uart3.h"
+			#endif
+			
 		#elif CPU_SERIES == XMEGA
 			#ifdef PLATFORM_SUPPORT_CONST_PRINT
 				#include "avr/pgmspace.h"		
@@ -72,7 +99,7 @@
 			#endif
 			#ifdef UARTF1_AVAILABLE
 				#include "AVR/XMEGA/drivers/avr_xmega_uartf1.h"				
-			#endif					
+			#endif
 		#endif
 	#endif
 #else

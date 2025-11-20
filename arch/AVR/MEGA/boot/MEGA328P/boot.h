@@ -54,17 +54,17 @@
 
 #include "controller_macros.h"
 
-#define GLOBAL_INTERRUPT_ENABLE() 	global_interrupt_enable()
-#define GLOBAL_INTERRUPT_DISABLE() 	global_interrupt_disable()
+#define GLOBAL_INTERRUPT_ENABLE() 		global_interrupt_enable()
+#define GLOBAL_INTERRUPT_DISABLE() 		global_interrupt_disable()
 
-#define ATOMIC_ON() 			GLOBAL_INTERRUPT_DISABLE()
-#define ATOMIC_OFF() 			GLOBAL_INTERRUPT_ENABLE()
+#define ATOMIC_ON() 					GLOBAL_INTERRUPT_DISABLE()
+#define ATOMIC_OFF() 					GLOBAL_INTERRUPT_ENABLE()
 
 #define IS_GLOBAL_INTERRUPT_ENABLE() 	is_global_interrupt_enable()
 #define IS_GLOBAL_INTERRUPT_DISABLE() 	is_global_interrupt_disable()
 
-#define IS_ATOMIC_ON()			IS_GLOBAL_INTERRUPT_DISABLE()
-#define IS_ATOMIC_OFF()			IS_GLOBAL_INTERRUPT_ENABLE()
+#define IS_ATOMIC_ON()					IS_GLOBAL_INTERRUPT_DISABLE()
+#define IS_ATOMIC_OFF()					IS_GLOBAL_INTERRUPT_ENABLE()
 
 /** 
 * \brief	Declare function to disable global interrupt. 

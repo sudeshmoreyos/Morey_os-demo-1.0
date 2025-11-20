@@ -10,9 +10,10 @@ int main(void)
 {
     setup();
     #ifdef DISABLE_OS
+		NO_OS_INIT();
         while(1)
         {
-            loop();
+			loop();
         }
     #else
         OS_INIT();

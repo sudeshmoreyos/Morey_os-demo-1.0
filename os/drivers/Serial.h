@@ -9,7 +9,7 @@ struct serial_driver
 	void (*end)(void);
 	unsigned int (*available)(void);
 	mos_uint8_t (*read)(void);
-	void (*flush)(void);
+	void (*rxEmpty)(void);
 	void (*write)(mos_uint8_t data);
 	void (*print)(char *data);
 	void (*println)(char *data);
@@ -19,7 +19,16 @@ struct serial_driver
 	#endif
 	void (*printBytes)(mos_uint8_t * data, mos_uint16_t len);
 	mos_uint8_t (*txComplete)(void);
+	#ifdef SERIAL_LINE_ENABLE
+		void (*terminator)(void * term, uint8_t len);
+		unsigned int (*stringAvailable)(void);
+		unsigned int (*readString)(char * data, int max_len);
+	#endif
 };
+
+// Backward compatibility of flush with new function rxEmpty
+// To be removed later
+#define flush rxEmpty
 
 #include "../../arch/arch_serial.h"
 
