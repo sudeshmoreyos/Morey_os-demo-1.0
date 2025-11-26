@@ -69,7 +69,7 @@
 #define UART_TX_DATA 			USART0.TXDATAL
 #define UART_BAUD				USART0.BAUD
 #define UART_PORTMUX			PORTMUX.USARTROUTEA
-#define UART_PORTMUX			0
+#define UART_PORTMUX_BIT		0
 #define UART_DRIVER				avr_mega0_uart0_driver
 
 #define UART_RX_INTERRUPT_ISR	USART0_RXC_vect
