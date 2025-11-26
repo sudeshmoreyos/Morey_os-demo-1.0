@@ -41,21 +41,26 @@ Morey_os is still under development. To know supported features and supported co
 
 **Current Version**
 
-1. Latest version is named as **Morey_os-demo-1.0** where digit before dot represents main version number while digit after dot represent sub-versions.
-2. Current version provides support for Arduino Uno. This version is launched as demo version just for demonstration purposes to relevant stakeholders.
-3. A full version Morey_os is already in the intermediate stage of development and is expected to be launched within a few months.
+1. The latest version is named **Morey_os-demo-1.0**, where the digit before the dot represents the main version number, and the digit after the dot represents the sub-version.
+2. The current version is the first major revision since the first Morey_os demo version was uploaded on GitHub. It provides support for the **Arduino Uno board**
+3. , several controllers from the **AVR Mega series**, and the **ATmega4809** controller from the **AVR Mega0 series**. Support for Arduino Mega board and many remaining controllers of Mega series and Mega0 series will be added soon. This version is released as a demo solely for demonstration purposes to relevant stakeholders.
+4. A full version Morey_os is already in the intermediate stage of development and is expected to be launched within a few months.
 
-Supported Controllers : 
+**Supported Controllers** : 
 
-1. Atmega328P, Atmega8
+1. **AVR Mega Series : Atmega8, Atmega16, Atmega128, Atmega328P, Atmega328PB, Atmega2560**
+2. **AVR Mega0 Series : Atmega4809**
 
-Supported Boards :
+**Supported Boards :**
 
-1. Arduino Uno
+1. **Arduino Uno**
 
 **Wiki Tutorials**
 
 Dont miss wiki tutorials to explore more about Morey_os : https://github.com/sudeshmoreyos/Morey_os-demo-1.0/wiki
 
 Contact Email : sudesh.moreyos@gmail.com
+
+
+
 
