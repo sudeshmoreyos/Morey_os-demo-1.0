@@ -506,7 +506,7 @@ static void end(void)
 	#ifdef SERIAL_LINE_ENABLE
 	
 		// set terminator bytes
-		static void terminator(mos_uint8_t * term, mos_uint8_t len)
+		static void terminator(void * term, mos_uint8_t len)
 		{			
 			// Set terminator_len
 			terminator_len = len;
@@ -551,7 +551,8 @@ static void end(void)
 		}
 		
 		// Function to read one string from Rx Buffer
-		static unsigned int readString(char * data)
+		// static unsigned int readString(char * data)
+		static unsigned int (*readString)(char * data, int max_len)
 		{
 			// Check if string_len is non zero i.e. Rx buffer contains valid strings
 			if(string_len)

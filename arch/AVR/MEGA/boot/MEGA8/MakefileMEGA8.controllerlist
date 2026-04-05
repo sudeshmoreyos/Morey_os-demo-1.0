@@ -1,9 +1,10 @@
 ifdef FREQ
-	F_CPU = $(FREQ)
-	CDEFS += -DCONTROLLER_FREQ_CONF=$(FREQ)UL
+F_CPU = $(FREQ)
+CDEFS += -DCONTROLLER_FREQ_CONF=$(FREQ)UL
+$(info Selected controller Frequency = $(F_CPU))
 else
-	F_CPU = 16000000
-    $(warning WARNING : Default 16MHz frequency is chosen for atmega8 controller)
+F_CPU = 16000000
+$(warning WARNING : Default 16MHz frequency is chosen for atmega8 controller)
 endif
 
 MCU = atmega8
