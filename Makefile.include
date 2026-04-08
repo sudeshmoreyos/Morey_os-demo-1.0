@@ -1,19 +1,19 @@
 ifndef BOARD
-	ifdef CONTROLLER
-		ifndef ARCH
-			$(error ERROR : ARCH Macro must be defined from command line for selected CONTROLLER)
-		endif
-	else
-		$(error ERROR : Either CONTROLLER or BOARD Macro must be defined from command line)
-	endif
+ifdef CONTROLLER
+ifndef ARCH
+$(error ERROR : ARCH Macro must be defined from command line for selected CONTROLLER)
+endif
+else
+$(error ERROR : Either CONTROLLER or BOARD Macro must be defined from command line)
+endif
 endif
 
 CDEFS = 
 PATHDIR = $(MOREY_OS_PATH)
 
 ifdef BOARD
-	include $(MOREY_OS_PATH)/board/Makefile.boardlist
-	PATHDIR +=  $(MOREY_OS_PATH)/board/$(BOARD_SERIES)/$(BOARD_MODULE)
+include $(MOREY_OS_PATH)/board/Makefile.boardlist
+PATHDIR +=  $(MOREY_OS_PATH)/board/$(BOARD_SERIES)/$(BOARD_MODULE)
 endif
 
 include $(MOREY_OS_PATH)/arch/Makefile.controllerlist
@@ -25,7 +25,7 @@ PATHDIR += $(MOREY_OS_PATH)/arch/$(CPU)/$(CPU_SERIES)/boot/$(CONTROLLER)
 
 SRC = $(PROJECT).c
 ifdef INCLUDE_SOURCES
-	SRC += $(INCLUDE_SOURCES)
+SRC += $(INCLUDE_SOURCES)
 endif
 SRC += $(MOREY_OS_PATH)/main.c
 
@@ -41,23 +41,23 @@ SRC += $(wildcard $(MOREY_OS_PATH)/arch/$(CPU)/$(CPU_SERIES)/lib/*.c)
 
 # List Object directory to save object files
 ifdef ARCH
-	OBJDIR = build/$(ARCH)/$(CONTROLLER)/obj
+OBJDIR = build/$(ARCH)/$(CONTROLLER)/obj
 else
-	OBJDIR = build/$(BOARD)/obj
+OBJDIR = build/$(BOARD)/obj
 endif
 
 # List Executable directory to save elf, hex, eep, etc. files
 ifdef ARCH
-	EXEDIR = build/$(ARCH)/$(CONTROLLER)/exe
+EXEDIR = build/$(ARCH)/$(CONTROLLER)/exe
 else
-	EXEDIR = build/$(BOARD)/exe
+EXEDIR = build/$(BOARD)/exe
 endif
 
 # List .dep directory to save dependencies
 ifdef ARCH
-	DEPDIR = build/$(ARCH)/$(CONTROLLER)/.dep
+DEPDIR = build/$(ARCH)/$(CONTROLLER)/.dep
 else
-	DEPDIR = build/$(BOARD)/.dep
+DEPDIR = build/$(BOARD)/.dep
 endif
 
 EXTRAINCDIRS = $(MOREY_OS_PATH) $(MOREY_OS_PATH)/os $(MOREY_OS_PATH)/os/drivers
