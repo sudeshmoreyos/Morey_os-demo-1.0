@@ -17,6 +17,7 @@ PATHDIR +=  $(MOREY_OS_PATH)/board/$(BOARD_SERIES)/$(BOARD_MODULE)
 endif
 
 include $(MOREY_OS_PATH)/arch/Makefile.controllerlist
+PATHDIR += $(MOREY_OS_PATH)/arch/$(CPU)/$(CPU_SERIES)/common
 PATHDIR += $(MOREY_OS_PATH)/arch/$(CPU)/$(CPU_SERIES)/drivers
 PATHDIR += $(MOREY_OS_PATH)/arch/$(CPU)/$(CPU_SERIES)/lib
 PATHDIR += $(MOREY_OS_PATH)/arch/$(CPU)/$(CPU_SERIES)/boot/$(CONTROLLER)
@@ -35,6 +36,7 @@ PATHDIR += $(MOREY_OS_PATH)/os/lib
 PATHDIR += $(MOREY_OS_PATH)/os/sys
 PATHDIR += $(MOREY_OS_PATH)/os/util
 
+SRC += $(wildcard $(MOREY_OS_PATH)/arch/$(CPU)/$(CPU_SERIES)/common/*.c)
 SRC += $(wildcard $(MOREY_OS_PATH)/arch/$(CPU)/$(CPU_SERIES)/boot/$(CONTROLLER)/*.c)
 SRC += $(wildcard $(MOREY_OS_PATH)/arch/$(CPU)/$(CPU_SERIES)/drivers/*.c)
 SRC += $(wildcard $(MOREY_OS_PATH)/arch/$(CPU)/$(CPU_SERIES)/lib/*.c)

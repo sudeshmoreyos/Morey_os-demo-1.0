@@ -1,7 +1,7 @@
 /**\addtogroup sources_MEGA8
 * @{ \defgroup boot_MEGA8_c
 * @{
-* \brief Documentaion of boot.c source file for Atmega8 controller
+* \brief Documentation of boot.c source file for Atmega8 controller
 * \author Sudesh Morey <sudesh.moreyos@gmail.com>
 *
 * This source file implements atmega8 boot functions
@@ -43,35 +43,27 @@ void platform_no_os_init(void)
 
 #define MEGA8_DEBUG_MSG1(msg)
 #define MEGA8_DEBUG_MSG2(msg)
-#define MEGA8_DEBUG_MSG3(msg)
 #define MEGA8_DEBUG_MSG_USER(msg)
 
 #elif MEGA8_DEBUG_LEVEL == MEGA8_DEBUG_USER
 
+#pragma message("User configured MEGA8_DEBUG_LEVEL to MEGA8_DEBUG_USER")
 #define MEGA8_DEBUG_MSG1(msg)    
 #define MEGA8_DEBUG_MSG2(msg)
-#define MEGA8_DEBUG_MSG3(msg)
 #define MEGA8_DEBUG_MSG_USER(msg)	MEGA8_DEBUG_MSG_TEMP(msg)
 
 #elif MEGA8_DEBUG_LEVEL == MEGA8_DEBUG_LEVEL1 
-  
+ 
+#pragma message("User configured MEGA8_DEBUG_LEVEL to MEGA8_DEBUG_LEVEL1")
 #define MEGA8_DEBUG_MSG1(msg)	MEGA8_DEBUG_MSG(msg)
 #define MEGA8_DEBUG_MSG2(msg)
-#define MEGA8_DEBUG_MSG3(msg)
 #define MEGA8_DEBUG_MSG_USER(msg)
 
 #elif MEGA8_DEBUG_LEVEL == MEGA8_DEBUG_LEVEL2
 
+#pragma message("User configured MEGA8_DEBUG_LEVEL to MEGA8_DEBUG_LEVEL2")
 #define MEGA8_DEBUG_MSG1(msg)	MEGA8_DEBUG_MSG(msg)
 #define MEGA8_DEBUG_MSG2(msg)	MEGA8_DEBUG_MSG(msg)
-#define MEGA8_DEBUG_MSG3(msg)
-#define MEGA8_DEBUG_MSG_USER(msg)
-
-#elif MEGA8_DEBUG_LEVEL == MEGA8_DEBUG_LEVEL3
-    
-#define MEGA8_DEBUG_MSG1(msg)	MEGA8_DEBUG_MSG(msg)    
-#define MEGA8_DEBUG_MSG2(msg)	MEGA8_DEBUG_MSG(msg)
-#define MEGA8_DEBUG_MSG3(msg)	MEGA8_DEBUG_MSG(msg)
 #define MEGA8_DEBUG_MSG_USER(msg)
 
 #else
@@ -181,7 +173,7 @@ static void timer_init(void)
 	MEGA8_DEBUG_MSG1("Selected Option : Timer type = TIMER_2  and Controller frequency = 16 Mhz");
 	
 	// for 16 MHz crystal frequency, 16 milli second is timer tick time, 
-	// timer2 is used and compare match interrupt is enabled to generate desired tick time.
+	// timer2 is used and overflow interrupt is enabled to generate desired tick time.
 	
 	// Timer/Counter 2 initialization
 	// Clock source: System Clock
@@ -189,16 +181,17 @@ static void timer_init(void)
 	// Mode: Normal top=0xFF
 	// OC2 output: Disconnected
 	// Timer Period: 16 ms
-	ASSR=0<<AS2;
-	TCCR2=(0<<PWM2) | (0<<COM21) | (0<<COM20) | (0<<CTC2) | (1<<CS22) | (1<<CS21) | (1<<CS20);
-	TCNT2=TIMER_COUNTER_START_VALUE;
-	OCR2=COMPARE_MATCH_MAX_TICK;
+	
+	// TCCR2=(0<<PWM2) | (0<<COM21) | (0<<COM20) | (0<<CTC2) | (1<<CS22) | (1<<CS21) | (1<<CS20);
+	TCCR2 = (0<<WGM20) | (0<<WGM21) |   // Normal mode
+        (0<<COM21) | (0<<COM20) |   // OC2 disconnected
+        (1<<CS22)  | (1<<CS21)  | (1<<CS20);  // Prescaler = 1024
+	TCNT2 = TIMER_COUNTER_START_VALUE;
+	OCR2 = 0x00;
 
 	// Timer(s)/Counter(s) Interrupt(s) initialization
-	TIMSK |= (1<<OCIE2);
-				// Timer(s)/Counter(s) Interrupt(s) initialization
-	TIMSK |= (1<<TOIE0);
-	
+	TIMSK |= (1<<TOIE2);
+
 #elif CONTROLLER_FREQ == 12000000UL
 	
 	MEGA8_DEBUG_MSG1("Selected Option : Timer type = TIMER_2  and Controller frequency = 12 Mhz");
@@ -206,7 +199,7 @@ static void timer_init(void)
 	#warning For XTAL_FREQ = 12 MHz, 0.16% error in timer calculations, strongly recommended to use other frequencies
 		
 	// for 12 MHz crystal frequency, 20 milli second is timer tick time,
-	// timer2 is used and compare match interrupt is enabled to generate desired tick time.
+	// timer2 is used and overflow interrupt is enabled to generate desired tick time.
 	
 	// Timer/Counter 2 initialization
 	// Clock source: System Clock
@@ -214,20 +207,23 @@ static void timer_init(void)
 	// Mode: Normal top=0xFF
 	// OC2 output: Disconnected
 	// Timer Period: 20 ms
-	ASSR=0<<AS2;
-	TCCR2=(0<<PWM2) | (0<<COM21) | (0<<COM20) | (0<<CTC2) | (1<<CS22) | (1<<CS21) | (1<<CS20);
-	TCNT2=TIMER_COUNTER_START_VALUE;
-	OCR2=COMPARE_MATCH_MAX_TICK;
+	
+	//TCCR2=(0<<PWM2) | (0<<COM21) | (0<<COM20) | (0<<CTC2) | (1<<CS22) | (1<<CS21) | (1<<CS20);
+	TCCR2 = (0<<WGM20) | (0<<WGM21) |   // Normal mode
+        (0<<COM21) | (0<<COM20) |   // OC2 disconnected
+        (1<<CS22)  | (1<<CS21)  | (1<<CS20);  // Prescaler = 1024
+	TCNT2 = TIMER_COUNTER_START_VALUE;
+	OCR2 = 0x00;
 
 	// Timer(s)/Counter(s) Interrupt(s) initialization
-	TIMSK |= (1<<OCIE2);
+	TIMSK |= (1<<TOIE2);
 	
 #elif CONTROLLER_FREQ == 8000000UL    
 	
 	MEGA8_DEBUG_MSG1("Selected Option : Timer type = TIMER_2  and Controller frequency = 8 Mhz");
 	
 	// for 8 MHz crystal frequency, 8 milli second is timer tick time,
-	// timer2 is used and compare match interrupt is enabled to generate desired tick time.
+	// timer2 is used and overflow interrupt is enabled to generate desired tick time.
 	
 	// Timer/Counter 2 initialization
 	// Clock source: System Clock
@@ -235,20 +231,23 @@ static void timer_init(void)
 	// Mode: Normal top=0xFF
 	// OC2 output: Disconnected
 	// Timer Period: 8 ms
-	ASSR=0<<AS2;
-	TCCR2=(0<<PWM2) | (0<<COM21) | (0<<COM20) | (0<<CTC2) | (1<<CS22) | (1<<CS21) | (0<<CS20);
-	TCNT2=TIMER_COUNTER_START_VALUE;            
-	OCR2=COMPARE_MATCH_MAX_TICK;
+	
+	// TCCR2=(0<<PWM2) | (0<<COM21) | (0<<COM20) | (0<<CTC2) | (1<<CS22) | (1<<CS21) | (0<<CS20);
+	TCCR2 = (0<<WGM20) | (0<<WGM21) |   // Normal mode
+        (0<<COM21) | (0<<COM20) |   // OC2 disconnected
+        (1<<CS22)  | (1<<CS21)  | (0<<CS20);  // Prescaler = 256
+	TCNT2 = TIMER_COUNTER_START_VALUE;            
+	OCR2 = 0x00;
 
 	// Timer(s)/Counter(s) Interrupt(s) initialization
-	TIMSK |= (1<<OCIE2);
+	TIMSK |= (1<<TOIE2);
 	
 #elif CONTROLLER_FREQ == 1000000UL
 	
 	MEGA8_DEBUG_MSG1("Selected Option : Timer type = TIMER_2  and Controller frequency = 1 Mhz");
 	
 	// for 1 MHz crystal frequency, 16 milli second is timer tick time,
-	// timer2 is used and compare match interrupt is enabled to generate desired tick time
+	// timer2 is used and overflow interrupt is enabled to generate desired tick time
 
 	// Timer/Counter 2 initialization
 	// Clock source: System Clock
@@ -256,13 +255,16 @@ static void timer_init(void)
 	// Mode: Normal top=0xFF
 	// OC2 output: Disconnected
 	// Timer Period: 16 ms
-	ASSR=0<<AS2;
-	TCCR2=(0<<PWM2) | (0<<COM21) | (0<<COM20) | (0<<CTC2) | (1<<CS22) | (0<<CS21) | (0<<CS20);
-	TCNT2=TIMER_COUNTER_START_VALUE;
-	OCR2=COMPARE_MATCH_MAX_TICK;
+	
+	// TCCR2=(0<<PWM2) | (0<<COM21) | (0<<COM20) | (0<<CTC2) | (1<<CS22) | (0<<CS21) | (0<<CS20);
+	TCCR2 = (0<<WGM20) | (0<<WGM21) |   // Normal mode
+        (0<<COM21) | (0<<COM20) |   // OC2 disconnected
+        (1<<CS22)  | (0<<CS21)  | (0<<CS20);  // Prescaler = 1024
+	TCNT2 = TIMER_COUNTER_START_VALUE;
+	OCR2 = 0x00;
 
 	// Timer(s)/Counter(s) Interrupt(s) initialization
-	TIMSK |= (1<<OCIE2);
+	TIMSK |= (1<<TOIE2);
 	
 #else 
 #error Incorrect CONTROLLER_FREQ : For mega8 Controller MOREY_OS supports only four frequencies (Hz) i.e. 1000000, 8000000, 12000000 or 16000000
@@ -415,33 +417,12 @@ static void watchdog_init(void)
     MEGA8_DEBUG_MSG2("Watchdog Timer initiated");
 }
 
-void watchdog_periodic(void)
-{
-#if ( (COMPILER == AVR_STUDIO) || ( COMPILER == WIN_AVR ) || ( COMPILER == AVR_GCC )) 
-	wdt_reset();
-#elif COMPILER == CODEVISION_AVR
-	#asm("wdr")
-#endif
-	MEGA8_DEBUG_MSG3("Watchdog Reset");
-}
-
 static void sleep_init(void)
 {
 #if ( (COMPILER == AVR_STUDIO) || ( COMPILER == WIN_AVR ) || ( COMPILER == AVR_GCC ) || ( COMPILER == CODEVISION_AVR ))
 	sleep_enable();
 #endif
     MEGA8_DEBUG_MSG2("Sleep Mode Initiated");
-}
-
-void sleep(void)
-{
-    MEGA8_DEBUG_MSG3("Sleeping");
-#if ( (COMPILER == AVR_STUDIO) || ( COMPILER == WIN_AVR ) || ( COMPILER == AVR_GCC ) )
-	sleep_mode();
-#elif ( COMPILER == CODEVISION_AVR )
-	idle();
-#endif
-    MEGA8_DEBUG_MSG3("Woke up");
 }
 
 #endif

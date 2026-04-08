@@ -5,7 +5,9 @@
 
 #if CPU == AVR
 	#if CPU_SERIES == MEGA
-	
+		
+		#include "AVR/MEGA/common/avr_mega_common_boot.h"
+		
 		#if CONTROLLER == MEGA8
 			#include "AVR/MEGA/boot/MEGA8/boot.h"
 		#endif // CONTROLLER == MEGA8

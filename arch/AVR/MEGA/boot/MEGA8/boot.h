@@ -57,73 +57,6 @@
 
 #include "controller_macros.h"
 
-#define GLOBAL_INTERRUPT_ENABLE()	global_interrupt_enable()
-#define GLOBAL_INTERRUPT_DISABLE() 	global_interrupt_disable()
-
-#define ATOMIC_ON()	GLOBAL_INTERRUPT_DISABLE()
-#define ATOMIC_OFF()	GLOBAL_INTERRUPT_ENABLE()
-
-#define IS_GLOBAL_INTERRUPT_ENABLE()	is_global_interrupt_enable()
-#define IS_GLOBAL_INTERRUPT_DISABLE()	is_global_interrupt_disable()
-
-#define IS_ATOMIC_ON()	IS_GLOBAL_INTERRUPT_DISABLE()
-#define IS_ATOMIC_OFF()	IS_GLOBAL_INTERRUPT_ENABLE()
-
-/**
-* \name Global Interrupt Functions (Controller specific)
-* \brief Define controller specific global interrupt enable and disable functions for atomic operations
-* @{
-*/
-
-/** 
-* \brief	Declare function to enable global interrupt. 
-* This function can be used to do atomic operations 
-*/
-static inline void global_interrupt_enable(void)
-{
-#if (COMPILER == AVR_STUDIO) || (COMPILER == WIN_AVR) || (COMPILER == AVR_GCC)
-	// Global enable interrupts
-	sei();
-#endif
-}
-
-/** 
-* \brief	Declare function to disable global interrupt. 
-* This function must be called after completing atomic operations
-*/
-static inline void global_interrupt_disable(void)
-{
-#if (COMPILER == AVR_STUDIO) || (COMPILER == WIN_AVR) || (COMPILER == AVR_GCC)
-	// Global disable interrupts
-	cli();
-#endif
-}
-
-/** 
-* \brief	Declare function to check if global interrupt is enabled.
-* This function must be called to check if Global interrupt is already enabled or not.
-*/
-static inline mos_uint8_t is_global_interrupt_enable(void)
-{
-	if( SREG & (1<<7) )
-		return 1;
-	else
-		return 0;
-}
-
-/** 
-* \brief	Declare function to check if global interrupt is disabled.
-* This function must be called to check if Global interrupt is already disabled or not.
-*/
-static inline mos_uint8_t is_global_interrupt_disable(void)
-{
-	if( SREG & (1<<7) )
-		return 0;
-	else
-		return 1;
-}
-///@}
-
 #ifdef PLATFORM_SUPPORT_NO_OS_INIT
 
 // Replace PLATFORM_NO_OS_INIT macro with platform_no_os_init() function
@@ -135,11 +68,6 @@ void platform_no_os_init(void);
 // Check if OS functionality is not disabled
 #ifndef DISABLE_OS
 
-// define typedefs required by OS and scheduler clock
-typedef mos_uint16_t program_address_t;
-typedef mos_uint32_t clock_second_t;
-typedef mos_uint16_t clock_millisecond_t;
-
 /**
 * \name MACROS : Atmega8 Boot Debug Levels
 * \brief Define different levels for Atmega8 boot debugging
@@ -149,7 +77,6 @@ typedef mos_uint16_t clock_millisecond_t;
 #define MEGA8_DEBUG_USER 1
 #define MEGA8_DEBUG_LEVEL1 2
 #define MEGA8_DEBUG_LEVEL2 3
-#define MEGA8_DEBUG_LEVEL3 4 
 ///@}
 
 /**
@@ -196,17 +123,17 @@ typedef mos_uint16_t clock_millisecond_t;
     
 // For OS_TIMER_TYPE == 2 timer2 is used
      
-#define PLATFORM_SUPPORT_TICKLESS
+// #define PLATFORM_SUPPORT_TICKLESS
 
-#define OS_TICKING_INTERRUPT	TIMER2_COMP_vect
+#define OS_TICKING_INTERRUPT	TIMER2_OVF_vect
 #define OS_TICKING_TIMER_COUNTER	TCNT2
-#define OS_TICKLESS_TIMER_REGISTER	OCR2
-#define TIMER_COUNTER_START_VALUE	0x00
-#define TIMER_REGISTER_DEFAULT_VALUE	0xFF
+// #define OS_TICKLESS_TIMER_REGISTER	OCR2
+// #define TIMER_COUNTER_START_VALUE	0x00
+// #define TIMER_REGISTER_DEFAULT_VALUE	0xFF
 
 #if CONTROLLER_FREQ == 16000000UL
-		
-#define COMPARE_MATCH_MAX_TICK	250
+
+#define TIMER_COUNTER_START_VALUE	0x06
 #define CLOCK_MILLISECOND_MAX_CONSTANT	16
 #define CLOCK_MILLISECOND_TO_TICK_CONSTANT	16
 // In some Timer settings, CLOCK_MILLISECOND_TO_TICK_CONSTANT has decimal values
@@ -214,7 +141,7 @@ typedef mos_uint16_t clock_millisecond_t;
 				
 #elif CONTROLLER_FREQ == 12000000UL
 
-#define COMPARE_MATCH_MAX_TICK	234
+#define TIMER_COUNTER_START_VALUE	0x16
 #define CLOCK_MILLISECOND_MAX_CONSTANT	20
 #define CLOCK_MILLISECOND_TO_TICK_CONSTANT	12
 // In some Timer settings, CLOCK_MILLISECOND_TO_TICK_CONSTANT has decimal values
@@ -222,7 +149,7 @@ typedef mos_uint16_t clock_millisecond_t;
 
 #elif CONTROLLER_FREQ == 8000000UL
 
-#define COMPARE_MATCH_MAX_TICK	250
+#define TIMER_COUNTER_START_VALUE	0x06
 #define CLOCK_MILLISECOND_MAX_CONSTANT	8
 #define CLOCK_MILLISECOND_TO_TICK_CONSTANT	32
 // In some Timer settings, CLOCK_MILLISECOND_TO_TICK_CONSTANT has decimal values
@@ -230,7 +157,7 @@ typedef mos_uint16_t clock_millisecond_t;
 
 #elif CONTROLLER_FREQ == 1000000UL
 
-#define COMPARE_MATCH_MAX_TICK	250
+#define TIMER_COUNTER_START_VALUE	0x06
 #define CLOCK_MILLISECOND_MAX_CONSTANT	16
 #define CLOCK_MILLISECOND_TO_TICK_CONSTANT	16
 // In some Timer settings, CLOCK_MILLISECOND_TO_TICK_CONSTANT has decimal values
@@ -291,8 +218,6 @@ typedef mos_uint16_t clock_millisecond_t;
 ///@}
 
 #define PLATFORM_INIT() platform_init()
-#define WATCHDOG_PERIODIC() watchdog_periodic()
-#define OS_SLEEP() sleep()
 
 /** 
 * \brief	Declare function to init essential peripherals required by OS
@@ -303,16 +228,6 @@ typedef mos_uint16_t clock_millisecond_t;
 * when no task is running to save power.
 */
 void platform_init(void);
-
-/** 
-* \brief	Declare function to periodically reset watchdog timer 
-*/
-void watchdog_periodic(void);
-
-/** 
-* \brief	Declare function to go to sleep or idle mode to save power
-*/
-void sleep(void);
 
 #endif
 #endif
