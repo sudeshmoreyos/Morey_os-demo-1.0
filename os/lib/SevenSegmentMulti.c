@@ -78,7 +78,7 @@ void SevenSegmentMulti_config(SevenSegmentMulti_t * seven_segment_multi_obj, mos
 	}
 }
 
-void SevenSegmentMulti_print (SevenSegmentMulti_t * seven_segment_multi_obj, mos_uint16_t number)
+void SevenSegmentMulti_print (SevenSegmentMulti_t * seven_segment_multi_obj, mos_uint32_t number)
 {
 	mos_uint8_t dot_position[seven_segment_multi_obj->segment_count];
 	mos_uint8_t reverse_position[seven_segment_multi_obj->segment_count];
@@ -89,7 +89,7 @@ void SevenSegmentMulti_print (SevenSegmentMulti_t * seven_segment_multi_obj, mos
 	SevenSegmentMulti_printDotReverse(seven_segment_multi_obj, number, dot_position, reverse_position);
 }
 
-void SevenSegmentMulti_printReverse (SevenSegmentMulti_t * seven_segment_multi_obj, mos_uint16_t number, \
+void SevenSegmentMulti_printReverse (SevenSegmentMulti_t * seven_segment_multi_obj, mos_uint32_t number, \
 	mos_uint8_t * reverse_position)
 {
 	mos_uint8_t dot_position[seven_segment_multi_obj->segment_count];
@@ -99,7 +99,7 @@ void SevenSegmentMulti_printReverse (SevenSegmentMulti_t * seven_segment_multi_o
 		
 }
 
-void SevenSegmentMulti_printDot(SevenSegmentMulti_t * seven_segment_multi_obj, mos_uint16_t number,\
+void SevenSegmentMulti_printDot(SevenSegmentMulti_t * seven_segment_multi_obj, mos_uint32_t number,\
 	mos_uint8_t * dot_position)
 {
 	mos_uint8_t reverse_position[seven_segment_multi_obj->segment_count];
@@ -108,7 +108,7 @@ void SevenSegmentMulti_printDot(SevenSegmentMulti_t * seven_segment_multi_obj, m
 	SevenSegmentMulti_printDotReverse(seven_segment_multi_obj, number, dot_position, reverse_position);
 }
 
-void SevenSegmentMulti_printDotReverse(SevenSegmentMulti_t * seven_segment_multi_obj, mos_uint16_t number,\
+void SevenSegmentMulti_printDotReverse(SevenSegmentMulti_t * seven_segment_multi_obj, mos_uint32_t number,\
 	mos_uint8_t * dot_position, mos_uint8_t * reverse_position)
 {
 	mos_uint8_t i = 0, temp_symbol;
