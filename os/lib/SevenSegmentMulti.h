@@ -14,7 +14,7 @@ typedef struct seven_segment_multi_struct
 	SevenSegment_t * seven_segment_obj;
 	mos_uint8_t segment_count;
 	mos_uint8_t * segment_common_pins;
-	mos_uint8_t symbol_display[8];
+	mos_uint8_t symbol_display[16];
 	mos_uint8_t count;
 	mos_uint8_t switch_on;
 	mos_uint8_t switch_off;
